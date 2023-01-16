@@ -135,7 +135,7 @@ public static class Tools
         var resultVarString = idString + "Result";
         var tail = "";
         var head = "";
-       
+
         switch (parentTypeString)
         {
             case "Root":
@@ -163,15 +163,15 @@ public static class Tools
                 break;
             case "PluginBehaviac.Nodes.IfElse_condition":
 
-                tail = $"if({resultVarString} == true)\n";
+                tail = $"if({resultVarString} == {CSharpStrings.Success})\n{{\n";
                 break;
             case "PluginBehaviac.Nodes.IfElse_if":
-                head = "{\n";
-                tail = parentVarString + " = " + resultVarString + "\n}";
+
+                tail = parentVarString + " = " + resultVarString + ";";
                 break;
             case "PluginBehaviac.Nodes.IfElse_else":
-                head = "else\n{\n";
-                tail = parentVarString + " = " + resultVarString + "\n}";
+                head = "\n}\nelse\n{\n";
+                tail = parentVarString + " = " + resultVarString + ";\n}\n";
                 break;
             case "PluginBehaviac.Nodes.WithPreconditionPrecondition":
 
@@ -325,7 +325,7 @@ public static class Tools
                     var resOp = node.Attribute("ResultOption")?.Value ??
                                 throw new NullReferenceException($"not Res @ {id}");
                     var stringToEnum = CSharpStrings.StringToEnum(resOp);
-                    var b = resultVarString + "=" + stringToEnum + ";\n";
+                    var b = resultVarString + " = " + stringToEnum + ";\n";
                     body = a + b;
                 }
 
