@@ -135,7 +135,7 @@ public static class Tools
         var resultVarString = idString + "Result";
         var tail = "";
         var head = "";
-        var head2 = "";
+       
         switch (parentTypeString)
         {
             case "Root":
@@ -204,8 +204,9 @@ public static class Tools
                 head = "//选择监测\n";
                 tail = $"if({resultVarString} != {CSharpStrings.Invalid})\n" +
                        "{\n"
-                       + $"{parentVarString} = {resultVarString};\n"
-                       + $"if ({resultVarString} == EBTStatus.BT_RUNNING)\n{{\nNode{parentId}WhichBranchRunning = {intId};\n}}\n"
+                       // + $"{parentVarString} = {resultVarString};\n"
+                       //Node11WhichBranchRunning =(Node13Result == EBTStatus.BT_RUNNING) ? 13 : -1;
+                       + $"Node{parentId}WhichBranchRunning = {resultVarString} == EBTStatus.BT_RUNNING ? {intId} : -1;\n"
                        // if (Node13Result == EBTStatus.BT_RUNNING)
                        // {
                        //     Node11WhichBranchRunning = 13;
@@ -311,7 +312,7 @@ public static class Tools
                         // Node13Result= EBTStatus.BT_RUNNING;
                         // goto Node13Out;
                         $"{goNode}Result = {CSharpStrings.Running};\n"
-                        + $"goto {goNode}Out;"
+                        + $"goto {goNode}Out;\n"
                         + "}\n"
                         + $"{rootRunningNodeString} = -1;";
 
@@ -356,9 +357,9 @@ public static class Tools
                        + CSharpStrings.RemoveParameterAndActionHead(p2) + ";";
                 break;
             case "PluginBehaviac.Nodes.SelectorLoop":
-                acp2 = needResult
-                    ? $"private {CSharpStrings.BtStatusEnumName} {resultVarString} {{ get; set; }}\n"
-                    : "";
+                // acp2 = needResult
+                //     ? $"private {CSharpStrings.BtStatusEnumName} {resultVarString} {{ get; set; }}\n"
+                //     : "";
                 // private int Node11WhichBranchRunning { get; set; } = -1;
                 acp2 += $"private int {idString}WhichBranchRunning {{ get; set; }} = -1;\n";
                 headResult = "\n";
@@ -439,7 +440,7 @@ public static class Tools
         var link = CSharpStrings.GenOperator(op);
         var bb = ConvertArmToFuncOrParam(agentObjName, left) + link +
                  ConvertArmToFuncOrParam(agentObjName, right);
-        bb = $"({bb}) ? {CSharpStrings.Success} : {CSharpStrings.Fail};\n";
+        bb = $"{bb} ? {CSharpStrings.Success} : {CSharpStrings.Fail};\n";
 
         body = needResult ? resultVarString + $" = {bb};\n" : "";
         return headResult;

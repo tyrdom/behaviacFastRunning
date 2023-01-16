@@ -42,7 +42,6 @@ private EBTStatus Node25Result { get; set; }
 private EBTStatus Node19Result { get; set; }
 private EBTStatus Node12Result { get; set; }
 private int Node12RunningNode { get; set; } = -1;
-private EBTStatus Node11Result { get; set; }
 private int Node11WhichBranchRunning { get; set; } = -1;
 private EBTStatus Node0Result { get; set; }
 public EBTStatus Tick()
@@ -91,7 +90,7 @@ Node9Out:
 //Node3
 Node3Result = EBTStatus.BT_SUCCESS;
 Node3Enter:
-Node3Result = (ObjAgent.IsInValidVint3(testVar) == false) ? EBTStatus.BT_SUCCESS : EBTStatus.BT_FAILURE;
+Node3Result = ObjAgent.IsInValidVint3(testVar) == false ? EBTStatus.BT_SUCCESS : EBTStatus.BT_FAILURE;
 ;
 
 
@@ -126,7 +125,7 @@ Node4Enter:
 //Node8
 Node8Result = EBTStatus.BT_SUCCESS;
 Node8Enter:
-Node8Result = (ObjAgent.IsInValidVint3(testVar) == true) ? EBTStatus.BT_SUCCESS : EBTStatus.BT_FAILURE;
+Node8Result = ObjAgent.IsInValidVint3(testVar) == true ? EBTStatus.BT_SUCCESS : EBTStatus.BT_FAILURE;
 ;
 
 
@@ -191,7 +190,7 @@ Node16Enter:
 //Node38
 Node38Result = EBTStatus.BT_SUCCESS;
 Node38Enter:
-Node38Result = (ObjAgent.IsInValidVint3(testVar) == false) ? EBTStatus.BT_SUCCESS : EBTStatus.BT_FAILURE;
+Node38Result = ObjAgent.IsInValidVint3(testVar) == false ? EBTStatus.BT_SUCCESS : EBTStatus.BT_FAILURE;
 ;
 
 
@@ -210,7 +209,8 @@ Node10Result = ObjAgent.IsOffline();
 {
 Node0RunningNode = 10;
 Node0Result = EBTStatus.BT_RUNNING;
-goto Node0Out;}
+goto Node0Out;
+}
 Node0RunningNode = -1;
 
 Node10Out:
@@ -246,7 +246,8 @@ Node17Result = ObjAgent.PlayAgeAction("balabala");
 {
 Node13RunningNode = 17;
 Node13Result = EBTStatus.BT_RUNNING;
-goto Node13Out;}
+goto Node13Out;
+}
 Node13RunningNode = -1;
 
 Node17Out:
@@ -256,11 +257,7 @@ Node13Result = Node17Result;
 Node13Out:
 if(Node13Result != EBTStatus.BT_INVALID)
 {
-Node11Result = Node13Result;
-if (Node13Result == EBTStatus.BT_RUNNING)
-{
-Node11WhichBranchRunning = 13;
-}
+Node11WhichBranchRunning = Node13Result == EBTStatus.BT_RUNNING ? 13 : -1;
 goto Node11Out;
 }
 
@@ -277,7 +274,7 @@ Node12Enter:
 //选择监测条件
 Node14Result = EBTStatus.BT_SUCCESS;
 Node14Enter:
-Node14Result = (ObjAgent.IsInValidVint3(testVar) == true) ? EBTStatus.BT_SUCCESS : EBTStatus.BT_FAILURE;
+Node14Result = ObjAgent.IsInValidVint3(testVar) == true ? EBTStatus.BT_SUCCESS : EBTStatus.BT_FAILURE;
 ;
 
 
@@ -336,7 +333,7 @@ Node22Out:
 //Node23
 Node23Result = EBTStatus.BT_SUCCESS;
 Node23Enter:
-Node23Result = (ObjAgent.IsInValidVint3(testVar) == false) ? EBTStatus.BT_SUCCESS : EBTStatus.BT_FAILURE;
+Node23Result = ObjAgent.IsInValidVint3(testVar) == false ? EBTStatus.BT_SUCCESS : EBTStatus.BT_FAILURE;
 ;
 
 
@@ -371,7 +368,7 @@ Node25Enter:
 //Node26
 Node26Result = EBTStatus.BT_SUCCESS;
 Node26Enter:
-Node26Result = (ObjAgent.IsInValidVint3(testVar) == true) ? EBTStatus.BT_SUCCESS : EBTStatus.BT_FAILURE;
+Node26Result = ObjAgent.IsInValidVint3(testVar) == true ? EBTStatus.BT_SUCCESS : EBTStatus.BT_FAILURE;
 ;
 
 
@@ -390,7 +387,8 @@ Node15Result = ObjAgent.PlayAgeAction("balabala");
 {
 Node12RunningNode = 15;
 Node12Result = EBTStatus.BT_RUNNING;
-goto Node12Out;}
+goto Node12Out;
+}
 Node12RunningNode = -1;
 
 Node15Out:
@@ -439,11 +437,7 @@ Node12Result = Node19Result;
 Node12Out:
 if(Node12Result != EBTStatus.BT_INVALID)
 {
-Node11Result = Node12Result;
-if (Node12Result == EBTStatus.BT_RUNNING)
-{
-Node11WhichBranchRunning = 12;
-}
+Node11WhichBranchRunning = Node12Result == EBTStatus.BT_RUNNING ? 12 : -1;
 goto Node11Out;
 }
 
