@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "E:\\workspace\\testDotNet\\BehavicOut\\BehaviacRunTest\\BehaviacRunTest.csproj": {}
+    "E:\\workspace\\testDotNet\\behaviacRun\\BehavicOut\\BehaviacRunTest\\BehaviacRunTest.csproj": {}
   },
   "projects": {
-    "E:\\workspace\\testDotNet\\BehavicOut\\BehaviacRunTest\\BehaviacRunTest.csproj": {
+    "E:\\workspace\\testDotNet\\behaviacRun\\BehavicOut\\BehaviacRunTest\\BehaviacRunTest.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "E:\\workspace\\testDotNet\\BehavicOut\\BehaviacRunTest\\BehaviacRunTest.csproj",
+        "projectUniqueName": "E:\\workspace\\testDotNet\\behaviacRun\\BehavicOut\\BehaviacRunTest\\BehaviacRunTest.csproj",
         "projectName": "BehaviacRunTest",
-        "projectPath": "E:\\workspace\\testDotNet\\BehavicOut\\BehaviacRunTest\\BehaviacRunTest.csproj",
+        "projectPath": "E:\\workspace\\testDotNet\\behaviacRun\\BehavicOut\\BehaviacRunTest\\BehaviacRunTest.csproj",
         "packagesPath": "C:\\Users\\win10\\.nuget\\packages\\",
-        "outputPath": "E:\\workspace\\testDotNet\\BehavicOut\\BehaviacRunTest\\obj\\",
+        "outputPath": "E:\\workspace\\testDotNet\\behaviacRun\\BehavicOut\\BehaviacRunTest\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\win10\\AppData\\Roaming\\NuGet\\NuGet.Config"

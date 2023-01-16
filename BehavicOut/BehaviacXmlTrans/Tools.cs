@@ -70,8 +70,12 @@ public static class Tools
         var res = "";
         var node = xElement.Elements().FirstOrDefault(x => x.Name == "Node") ?? throw new NullReferenceException();
         var runningSwitch = "";
-        const string rootStatus = "\n int nowRunningNode{get;set;} = -1;\n";
-        var s = TransNode(node, "root", "Root", agentObjName, out var tsp,
+        var value = node.Attribute("Id")?.Value ?? throw new NullReferenceException();
+        var result = int.TryParse(value, out var ii) ? ii : throw new ArgumentOutOfRangeException();
+        var rootRunningNodeString = "Node" + result + "RunningNode";
+        var rootStatus = $"\n int {rootRunningNodeString}{{get;set;}} = -1;\n";
+        var s = TransNode(node, result, -1, "Root", agentObjName, result,
+            out var tsp,
             out var aRunningSwitch, out var nodeResultInitString) + "\n";
         var behaviortreestatus = "// BehaviorTreeStatus\n";
         treeStatusParamsAndAgentObj += behaviortreestatus + rootStatus + tsp;
@@ -81,15 +85,15 @@ public static class Tools
 
         if (runningSwitch == "") return head + res + "\n}";
 
-        var switchString = nodeResultInitString + "switch (nowRunningNode)\n{\n" + runningSwitch + "\n}\n";
+        var switchString = nodeResultInitString + $"switch ({rootRunningNodeString})\n{{\n"
+                                                + runningSwitch + "\n}\n";
         return head + switchString + res + "\n}";
     }
 
-    private static string TransNode(XElement node, string parentIdString, string parentTypeString,
-        string agentObjName,
+    private static string TransNode(XElement node, int parentId, int grandParentId, string parentTypeString,
+        string agentObjName, int runningGoNode,
         out string treeStatusValues,
-        out string headRunningSwitch, out string
-            nodeResultInitString)
+        out string headRunningSwitch, out string nodeResultInitString)
     {
         treeStatusValues = "";
         headRunningSwitch = "";
@@ -103,8 +107,10 @@ public static class Tools
             return res;
         }
 
-        var id = node.Attribute("Id")?.Value;
+        var id = node.Attribute("Id")?.Value ?? throw new NullReferenceException();
+        var intId = int.TryParse(id, out var iii) ? iii : throw new ArgumentException(id);
         var idString = "Node" + id;
+        var parentIdString = "Node" + parentId;
         var nodeType = node.Attribute("Class")?.Value;
 
         if (nodeType == null) throw new NullReferenceException($"{idString} type is Null");
@@ -121,29 +127,15 @@ public static class Tools
         var xElements = node.Elements("Connector");
 
 
-        var s = "";
-        // 向子树递归收集
-        foreach (var connector in xElements)
-        {
-            var s1 = TransConnector(connector, idString, nodeType, agentObjName, out var acp,
-                out var aRunningSwitch,
-                out var irs);
-            s += s1;
-            treeStatusValues += acp;
-            headRunningSwitch += aRunningSwitch;
-            nodeResultInitString += irs;
-        }
-
-        s = "\n" + s +
-            "\n";
-
         //与父节点关系
         var needResult = true;
+        var localswitch = false;
         var parentEndStringGoto = parentIdString + "Out;\n";
         var parentVarString = parentIdString + "Result";
         var resultVarString = idString + "Result";
         var tail = "";
         var head = "";
+        var head2 = "";
         switch (parentTypeString)
         {
             case "Root":
@@ -187,10 +179,39 @@ public static class Tools
                 tail = $"if({resultVarString} == {CSharpStrings.Fail})\n" +
                        "{\n"
                        + $"goto {parentEndStringGoto}"
-                       + "}";
+                       + "}\n"
+                       + "//如果切换了分支后再通过，那么会重置running下面running的节点到-1\n"
+                       + $"if (Node{grandParentId}WhichBranchRunning != {parentId})\n{{\nNode{parentId}RunningNode = -1;\n}}";
+                // {
+                //     Node13RunningNode = -1;
+                // }
                 break;
             case "PluginBehaviac.Nodes.WithPreconditionAction":
+                runningGoNode = parentId;
                 head = "//选择监测动作\n";
+
+                localswitch = true;
+                // {
+                //     case 17:
+                //         goto Node17Enter;
+                // }
+
+
+                tail = $"{parentVarString} = {resultVarString};\n";
+
+                break;
+            case "PluginBehaviac.Nodes.SelectorLoop":
+                head = "//选择监测\n";
+                tail = $"if({resultVarString} != {CSharpStrings.Invalid})\n" +
+                       "{\n"
+                       + $"{parentVarString} = {resultVarString};\n"
+                       + $"if ({resultVarString} == EBTStatus.BT_RUNNING)\n{{\nNode{parentId}WhichBranchRunning = {intId};\n}}\n"
+                       // if (Node13Result == EBTStatus.BT_RUNNING)
+                       // {
+                       //     Node11WhichBranchRunning = 13;
+                       // }
+                       + $"goto {parentEndStringGoto}"
+                       + "}\n";
                 break;
         }
 
@@ -248,6 +269,8 @@ public static class Tools
                 headResult = needResult ? resultVarString + $" = {CSharpStrings.Success};\n" : "\n";
                 var countString = node.Attribute("Count")?.Value;
                 headRunningSwitch += $"case {id}:\n" + $"goto {idString}Enter;\n";
+                //Node13Result= EBTStatus.BT_RUNNING;
+                // goto Node13Out;
                 var continueString = $"nowRunningNode = {id};\n"
                                      + $"return {resultVarString};\n";
                 if (countString == "const int -1")
@@ -269,7 +292,7 @@ public static class Tools
                     ? $"private {CSharpStrings.BtStatusEnumName} {resultVarString} {{ get; set; }}\n"
                     : "";
 
-                headResult = needResult ? "" + resultVarString + $" = {CSharpStrings.Success};\n" : "\n";
+                // headResult = needResult ? "" + resultVarString + $" = {CSharpStrings.Success};\n" : "\n";
                 var method = node.Attribute("Method")?.Value ??
                              throw new NullReferenceException($"no method in action node {id}");
 
@@ -278,11 +301,19 @@ public static class Tools
 
                 if (findReturnType == "behaviac::EBTStatus")
                 {
+                    var goNode = "Node" + runningGoNode;
+                    var rootRunningNodeString =
+                        goNode + "RunningNode";
                     var varString = resultVarString + " = " + methodName + ";\n";
                     var runningNowrunningnode =
-                        " if (" + resultVarString + $" == {CSharpStrings.Running} )\n" + "{\nnowRunningNode = " + id +
-                        ";\n return " + CSharpStrings.Running + ";\n }\n"
-                        + "nowRunningNode = -1;";
+                        " if (" + resultVarString + $" == {CSharpStrings.Running} )\n" +
+                        $"{{\n{rootRunningNodeString} = " + id + ";\n" +
+                        // Node13Result= EBTStatus.BT_RUNNING;
+                        // goto Node13Out;
+                        $"{goNode}Result = {CSharpStrings.Running};\n"
+                        + $"goto {goNode}Out;"
+                        + "}\n"
+                        + $"{rootRunningNodeString} = -1;";
 
                     headRunningSwitch += $"case {id}:\n" + $"goto {idString}Enter;\n";
                     body = varString + runningNowrunningnode;
@@ -328,17 +359,53 @@ public static class Tools
                 acp2 = needResult
                     ? $"private {CSharpStrings.BtStatusEnumName} {resultVarString} {{ get; set; }}\n"
                     : "";
-                headResult = needResult ? resultVarString + $" = {CSharpStrings.Invalid};\n" : "\n";
+                // private int Node11WhichBranchRunning { get; set; } = -1;
+                acp2 += $"private int {idString}WhichBranchRunning {{ get; set; }} = -1;\n";
+                headResult = "\n";
+                tail = "";
                 break;
             case "PluginBehaviac.Nodes.WithPrecondition":
+                acp2 = needResult
+                    ? $"private {CSharpStrings.BtStatusEnumName} {resultVarString} {{ get; set; }}\n"
+                    : "";
+                //Node13BranchRunningNode
 
+                acp2 += $"private int {idString}RunningNode {{ get; set; }} = -1;\n";
+                headResult = resultVarString + $" = {CSharpStrings.Invalid};\n";
                 break;
+
+
             default:
                 throw new ArgumentException($"Cant Read  {id} :Type {nodeType}");
         }
 
+
+        var s = "";
+        // 向子树递归收集
+        foreach (var connector in xElements)
+        {
+            var s1 = TransConnector(connector, intId, parentId, nodeType, agentObjName, runningGoNode,
+                out var acp,
+                out var aRunningSwitch,
+                out var irs);
+            s += s1;
+            treeStatusValues += acp;
+            headRunningSwitch += aRunningSwitch;
+            nodeResultInitString += irs;
+        }
+
+        s = "\n" + s +
+            "\n";
+
+        var localS = "";
+        if (localswitch && headRunningSwitch != "")
+        {
+            localS = $"switch (Node{runningGoNode}RunningNode)\n{{\n" + headRunningSwitch + "\n}\n";
+            headRunningSwitch = "";
+        }
+
         treeStatusValues += acp2;
-        res += headResult + head + enterString + body + s + outString + outPutString + tail;
+        res += localS + head + headResult + enterString + body + s + outString + outPutString + tail;
         return res;
     }
 
@@ -379,12 +446,15 @@ public static class Tools
     }
 
 
-    private static string TransConnector(XElement connector, string idString, string parentString, string agentObjName,
+    private static string TransConnector(XElement connector, int parentId, int grandParentId, string parentString,
+        string agentObjName,
+        int nowCheckRunningNode,
         out string acp,
         out string aRunningSwitch, out string irs)
     {
         aRunningSwitch = "";
-        var id = connector.Attribute("Identifier")?.Value;
+        var id = connector.Attribute("Identifier")?.Value ?? throw new NullReferenceException();
+
         var fixParentString = parentString;
         switch (id)
         {
@@ -413,7 +483,8 @@ public static class Tools
         irs = "";
         foreach (var xElement in xElements)
         {
-            var transNode = TransNode(xElement, idString, fixParentString, agentObjName,
+            var transNode = TransNode(xElement, parentId, grandParentId, fixParentString, agentObjName,
+                                nowCheckRunningNode,
                                 out var aStr, out var ars,
                                 out var airs) +
                             "\n";

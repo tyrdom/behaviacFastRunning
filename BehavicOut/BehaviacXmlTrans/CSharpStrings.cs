@@ -8,7 +8,7 @@ public static class CSharpStrings
     public static string Running { get; } = $"{BtStatusEnumName}.BT_RUNNING";
     public static string Invalid { get; } = $"{BtStatusEnumName}.BT_INVALID";
     public static string RunTimeInterface => ":IBTree";
-
+    public static string RootRunningNodeString => "rootRunningNode";
     public static Dictionary<string, (string CsharpType, bool IsNewType)> TypeDic => new()
     {
         {"int", ("int", false)}
