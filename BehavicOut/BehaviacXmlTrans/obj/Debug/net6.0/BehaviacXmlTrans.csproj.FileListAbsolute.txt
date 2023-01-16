@@ -1,0 +1,15 @@
+E:\workspace\testDotNet\BehavicOut\BehaviacXmlTrans\bin\Debug\net6.0\BehaviacXmlTrans.exe
+E:\workspace\testDotNet\BehavicOut\BehaviacXmlTrans\bin\Debug\net6.0\BehaviacXmlTrans.deps.json
+E:\workspace\testDotNet\BehavicOut\BehaviacXmlTrans\bin\Debug\net6.0\BehaviacXmlTrans.runtimeconfig.json
+E:\workspace\testDotNet\BehavicOut\BehaviacXmlTrans\bin\Debug\net6.0\BehaviacXmlTrans.dll
+E:\workspace\testDotNet\BehavicOut\BehaviacXmlTrans\bin\Debug\net6.0\BehaviacXmlTrans.pdb
+E:\workspace\testDotNet\BehavicOut\BehaviacXmlTrans\obj\Debug\net6.0\BehaviacXmlTrans.csproj.AssemblyReference.cache
+E:\workspace\testDotNet\BehavicOut\BehaviacXmlTrans\obj\Debug\net6.0\BehaviacXmlTrans.GeneratedMSBuildEditorConfig.editorconfig
+E:\workspace\testDotNet\BehavicOut\BehaviacXmlTrans\obj\Debug\net6.0\BehaviacXmlTrans.AssemblyInfoInputs.cache
+E:\workspace\testDotNet\BehavicOut\BehaviacXmlTrans\obj\Debug\net6.0\BehaviacXmlTrans.AssemblyInfo.cs
+E:\workspace\testDotNet\BehavicOut\BehaviacXmlTrans\obj\Debug\net6.0\BehaviacXmlTrans.csproj.CoreCompileInputs.cache
+E:\workspace\testDotNet\BehavicOut\BehaviacXmlTrans\obj\Debug\net6.0\BehaviacXmlTrans.dll
+E:\workspace\testDotNet\BehavicOut\BehaviacXmlTrans\obj\Debug\net6.0\refint\BehaviacXmlTrans.dll
+E:\workspace\testDotNet\BehavicOut\BehaviacXmlTrans\obj\Debug\net6.0\BehaviacXmlTrans.pdb
+E:\workspace\testDotNet\BehavicOut\BehaviacXmlTrans\obj\Debug\net6.0\BehaviacXmlTrans.genruntimeconfig.cache
+E:\workspace\testDotNet\BehavicOut\BehaviacXmlTrans\obj\Debug\net6.0\ref\BehaviacXmlTrans.dll

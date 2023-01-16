@@ -1,0 +1,51 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Behavior Version="5" NoError="true">
+  <Node Class="Behaviac.Design.Nodes.Behavior" AgentType="SGame::InGame::GameLogic::TestAgent::TestAgent" Domains="" Enable="true" HasOwnPrefabData="false" Id="-1" PrefabName="" PrefabNodeId="-1">
+    <Comment Background="NoColor" Text="" />
+    <Parameters>
+      <Parameter Name="localValueTest" Type="System.Int32" DefaultValue="0" DisplayName="localValueTest" Desc="localValueTest" Display="true" />
+      <Parameter Name="TestValueInt" Type="System.Int32" DefaultValue="0" DisplayName="TestValueInt" Desc="TestValueInt" Display="true" />
+      <Parameter Name="testInt" Type="System.Int32" DefaultValue="0" DisplayName="testInt" Desc="testInt" Display="true" />
+    </Parameters>
+    <DescriptorRefs value="0:" />
+    <Connector Identifier="GenericChildren">
+      <Node Class="PluginBehaviac.Nodes.Sequence" Enable="true" HasOwnPrefabData="false" Id="0" PrefabName="" PrefabNodeId="-1">
+        <Comment Background="NoColor" Text="" />
+        <Connector Identifier="GenericChildren">
+          <Node Class="PluginBehaviac.Nodes.Condition" Enable="true" HasOwnPrefabData="false" Id="2" Operator="GreaterEqual" Opl="int Self.SGame::InGame::GameLogic::TestAgent::TestAgent::testInt" Opr="const int 0" PrefabName="" PrefabNodeId="-1">
+            <Comment Background="NoColor" Text="" />
+          </Node>
+          <Node Class="PluginBehaviac.Nodes.Assignment" CastRight="false" Enable="true" HasOwnPrefabData="false" Id="3" Opl="int Self.SGame::InGame::GameLogic::TestAgent::TestAgent::testInt" Opr="const int 0" PrefabName="" PrefabNodeId="-1">
+            <Comment Background="NoColor" Text="" />
+          </Node>
+          <Node Class="PluginBehaviac.Nodes.Action" Enable="true" HasOwnPrefabData="false" Id="4" Method="Self.behaviac::Agent::LogMessage(&quot;Seq&quot;)" PrefabName="" PrefabNodeId="-1" ResultFunctor="&quot;&quot;" ResultOption="BT_SUCCESS">
+            <Comment Background="NoColor" Text="" />
+          </Node>
+          <Node Class="PluginBehaviac.Nodes.Action" Enable="true" HasOwnPrefabData="false" Id="8" Method="Self.SGame::InGame::GameLogic::TestAgent::TestAgent::TestRunning(5)" PrefabName="" PrefabNodeId="-1" ResultFunctor="&quot;&quot;" ResultOption="BT_INVALID">
+            <Comment Background="NoColor" Text="" />
+          </Node>
+          <Node Class="PluginBehaviac.Nodes.Assignment" CastRight="false" Enable="true" HasOwnPrefabData="false" Id="6" Opl="int Self.SGame::InGame::GameLogic::TestAgent::TestAgent::testInt" Opr="Self.SGame::InGame::GameLogic::TestAgent::TestAgent::TestGetValue()" PrefabName="" PrefabNodeId="-1">
+            <Comment Background="NoColor" Text="" />
+          </Node>
+          <Node Class="PluginBehaviac.Nodes.Compute" Enable="true" HasOwnPrefabData="false" Id="10" Operator="Add" Opl="int Self.SGame::InGame::GameLogic::TestAgent::TestAgent::testInt" Opr1="int Self.SGame::InGame::GameLogic::TestAgent::TestAgent::testInt" Opr2="const int 1" PrefabName="" PrefabNodeId="-1">
+            <Comment Background="NoColor" Text="" />
+          </Node>
+          <Node Class="PluginBehaviac.Nodes.Selector" Enable="true" HasOwnPrefabData="false" Id="1" PrefabName="" PrefabNodeId="-1">
+            <Comment Background="NoColor" Text="" />
+            <Connector Identifier="GenericChildren">
+              <Node Class="PluginBehaviac.Nodes.Condition" Enable="true" HasOwnPrefabData="false" Id="5" Operator="Greater" Opl="int Self.SGame::InGame::GameLogic::TestAgent::TestAgent::testInt" Opr="const int 4" PrefabName="" PrefabNodeId="-1">
+                <Comment Background="NoColor" Text="" />
+              </Node>
+              <Node Class="PluginBehaviac.Nodes.Action" Enable="true" HasOwnPrefabData="false" Id="7" Method="Self.behaviac::Agent::LogMessage(&quot;Select&quot;)" PrefabName="" PrefabNodeId="-1" ResultFunctor="&quot;&quot;" ResultOption="BT_FAILURE">
+                <Comment Background="NoColor" Text="" />
+              </Node>
+              <Node Class="PluginBehaviac.Nodes.Action" Enable="true" HasOwnPrefabData="false" Id="9" Method="Self.SGame::InGame::GameLogic::TestAgent::TestAgent::TestRunning(int Self.SGame::InGame::GameLogic::TestAgent::TestAgent::testInt)" PrefabName="" PrefabNodeId="-1" ResultFunctor="&quot;&quot;" ResultOption="BT_INVALID">
+                <Comment Background="NoColor" Text="" />
+              </Node>
+            </Connector>
+          </Node>
+        </Connector>
+      </Node>
+    </Connector>
+  </Node>
+</Behavior>

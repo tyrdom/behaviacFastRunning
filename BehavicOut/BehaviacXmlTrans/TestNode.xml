@@ -1,0 +1,172 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Behavior Version="5" NoError="true">
+  <Node Class="Behaviac.Design.Nodes.Behavior" AgentType="SGame::InGame::GameLogic::ObjAgent" Domains="" Enable="true" HasOwnPrefabData="false" Id="-1" PrefabName="" PrefabNodeId="-1">
+    <Comment Background="NoColor" Text="" />
+    <Parameters>
+      <Parameter Name="testVar" Type="XMLPluginBehaviac.VInt3" DefaultValue="{x=0;y=0;z=0;}" DisplayName="testVar" Desc="testVar" Display="true" />
+      <Parameter Name="TestInt" Type="System.Int32" DefaultValue="0" DisplayName="TestInt" Desc="TestInt" Display="true" />
+      <Parameter Name="testEnum" Type="XMLPluginBehaviac.SGame_InGame_GameLogic_SkillSlotType" DefaultValue="SLOT_SKILL_0" DisplayName="testEnum" Desc="testEnum" Display="true" />
+      <Parameter Name="EnumTest2" Type="XMLPluginBehaviac.SGame_InGame_GameLogic_AISkillTypeTag" DefaultValue="None" DisplayName="EnumTest2" Desc="EnumTest2" Display="true" />
+    </Parameters>
+    <DescriptorRefs value="0:" />
+    <Connector Identifier="GenericChildren">
+      <Node Class="PluginBehaviac.Nodes.Sequence" Enable="true" HasOwnPrefabData="false" Id="0" PrefabName="" PrefabNodeId="-1">
+        <Comment Background="NoColor" Text="" />
+        <Connector Identifier="GenericChildren">
+          <Node Class="PluginBehaviac.Nodes.Assignment" CastRight="false" Enable="true" HasOwnPrefabData="false" Id="1" Opl="VInt3 Self.SGame::InGame::GameLogic::ObjAgent::testVar" Opr="const VInt3 {x=0;y=0;z=0;}" PrefabName="" PrefabNodeId="-1">
+            <Comment Background="NoColor" Text="" />
+          </Node>
+          <Node Class="PluginBehaviac.Nodes.Assignment" CastRight="false" Enable="true" HasOwnPrefabData="false" Id="5" Opl="SGame::InGame::GameLogic::SkillSlotType Self.SGame::InGame::GameLogic::ObjAgent::testEnum" Opr="const SGame::InGame::GameLogic::SkillSlotType SLOT_SKILL_2" PrefabName="" PrefabNodeId="-1">
+            <Comment Background="NoColor" Text="" />
+          </Node>
+          <Node Class="PluginBehaviac.Nodes.Assignment" CastRight="false" Enable="true" HasOwnPrefabData="false" Id="9" Opl="int Self.SGame::InGame::GameLogic::ObjAgent::TestInt" Opr="const int 0" PrefabName="" PrefabNodeId="-1">
+            <Comment Background="NoColor" Text="" />
+          </Node>
+          <Node Class="PluginBehaviac.Nodes.Condition" Enable="true" HasOwnPrefabData="false" Id="3" Operator="Equal" Opl="Self.SGame::InGame::GameLogic::BTBaseAgent::IsInValidVint3(VInt3 Self.SGame::InGame::GameLogic::ObjAgent::testVar)" Opr="const bool false" PrefabName="" PrefabNodeId="-1">
+            <Comment Background="NoColor" Text="" />
+          </Node>
+          <Node Class="PluginBehaviac.Nodes.Action" Enable="true" HasOwnPrefabData="false" Id="2" Method="Self.behaviac::Agent::LogMessage(&quot;Seq：合法点&quot;)" PrefabName="" PrefabNodeId="-1" ResultFunctor="&quot;&quot;" ResultOption="BT_SUCCESS">
+            <Comment Background="NoColor" Text="" />
+          </Node>
+          <Node Class="PluginBehaviac.Nodes.Selector" Enable="true" HasOwnPrefabData="false" Id="4" PrefabName="" PrefabNodeId="-1">
+            <Comment Background="NoColor" Text="" />
+            <Connector Identifier="GenericChildren">
+              <Node Class="PluginBehaviac.Nodes.Condition" Enable="true" HasOwnPrefabData="false" Id="8" Operator="Equal" Opl="Self.SGame::InGame::GameLogic::BTBaseAgent::IsInValidVint3(VInt3 Self.SGame::InGame::GameLogic::ObjAgent::testVar)" Opr="const bool true" PrefabName="" PrefabNodeId="-1">
+                <Comment Background="NoColor" Text="" />
+              </Node>
+              <Node Class="PluginBehaviac.Nodes.Action" Enable="true" HasOwnPrefabData="false" Id="7" Method="Self.behaviac::Agent::LogMessage(&quot;Select：害是合法点&quot;)" PrefabName="" PrefabNodeId="-1" ResultFunctor="&quot;&quot;" ResultOption="BT_FAILURE">
+                <Comment Background="NoColor" Text="" />
+              </Node>
+              <Node Class="PluginBehaviac.Nodes.Assignment" CastRight="false" Enable="true" HasOwnPrefabData="false" Id="6" Opl="VInt3 Self.SGame::InGame::GameLogic::ObjAgent::testVar" Opr="const VInt3 {x=1;y=0;z=1;}" PrefabName="" PrefabNodeId="-1">
+                <Comment Background="NoColor" Text="" />
+              </Node>
+            </Connector>
+          </Node>
+          <Node Class="PluginBehaviac.Nodes.SelectorLoop" Enable="true" HasOwnPrefabData="false" Id="11" PrefabName="" PrefabNodeId="-1" ResetChildren="false">
+            <Comment Background="NoColor" Text="" />
+            <Connector Identifier="GenericChildren">
+              <Node Class="PluginBehaviac.Nodes.WithPrecondition" Enable="true" HasOwnPrefabData="false" Id="12" PrefabName="" PrefabNodeId="-1">
+                <Comment Background="NoColor" Text="" />
+                <Connector Identifier="Precondition">
+                  <Node Class="PluginBehaviac.Nodes.Condition" Enable="true" HasOwnPrefabData="false" Id="14" Operator="Equal" Opl="Self.SGame::InGame::GameLogic::BTBaseAgent::IsInValidVint3(VInt3 Self.SGame::InGame::GameLogic::ObjAgent::testVar)" Opr="const bool true" PrefabName="" PrefabNodeId="-1">
+                    <Comment Background="NoColor" Text="" />
+                  </Node>
+                </Connector>
+                <Connector Identifier="Action">
+                  <Node Class="PluginBehaviac.Nodes.Sequence" Enable="true" HasOwnPrefabData="false" Id="19" PrefabName="" PrefabNodeId="-1">
+                    <Comment Background="NoColor" Text="" />
+                    <Connector Identifier="GenericChildren">
+                      <Node Class="PluginBehaviac.Nodes.Assignment" CastRight="false" Enable="true" HasOwnPrefabData="false" Id="20" Opl="VInt3 Self.SGame::InGame::GameLogic::ObjAgent::testVar" Opr="const VInt3 {x=0;y=0;z=0;}" PrefabName="" PrefabNodeId="-1">
+                        <Comment Background="NoColor" Text="" />
+                      </Node>
+                      <Node Class="PluginBehaviac.Nodes.Assignment" CastRight="false" Enable="true" HasOwnPrefabData="false" Id="21" Opl="SGame::InGame::GameLogic::SkillSlotType Self.SGame::InGame::GameLogic::ObjAgent::testEnum" Opr="const SGame::InGame::GameLogic::SkillSlotType SLOT_SKILL_2" PrefabName="" PrefabNodeId="-1">
+                        <Comment Background="NoColor" Text="" />
+                      </Node>
+                      <Node Class="PluginBehaviac.Nodes.Assignment" CastRight="false" Enable="true" HasOwnPrefabData="false" Id="22" Opl="int Self.SGame::InGame::GameLogic::ObjAgent::TestInt" Opr="const int 0" PrefabName="" PrefabNodeId="-1">
+                        <Comment Background="NoColor" Text="" />
+                      </Node>
+                      <Node Class="PluginBehaviac.Nodes.Condition" Enable="true" HasOwnPrefabData="false" Id="23" Operator="Equal" Opl="Self.SGame::InGame::GameLogic::BTBaseAgent::IsInValidVint3(VInt3 Self.SGame::InGame::GameLogic::ObjAgent::testVar)" Opr="const bool false" PrefabName="" PrefabNodeId="-1">
+                        <Comment Background="NoColor" Text="" />
+                      </Node>
+                      <Node Class="PluginBehaviac.Nodes.Action" Enable="true" HasOwnPrefabData="false" Id="24" Method="Self.behaviac::Agent::LogMessage(&quot;Seq：合法点&quot;)" PrefabName="" PrefabNodeId="-1" ResultFunctor="&quot;&quot;" ResultOption="BT_SUCCESS">
+                        <Comment Background="NoColor" Text="" />
+                      </Node>
+                      <Node Class="PluginBehaviac.Nodes.Selector" Enable="true" HasOwnPrefabData="false" Id="25" PrefabName="" PrefabNodeId="-1">
+                        <Comment Background="NoColor" Text="" />
+                        <Connector Identifier="GenericChildren">
+                          <Node Class="PluginBehaviac.Nodes.Condition" Enable="true" HasOwnPrefabData="false" Id="26" Operator="Equal" Opl="Self.SGame::InGame::GameLogic::BTBaseAgent::IsInValidVint3(VInt3 Self.SGame::InGame::GameLogic::ObjAgent::testVar)" Opr="const bool true" PrefabName="" PrefabNodeId="-1">
+                            <Comment Background="NoColor" Text="" />
+                          </Node>
+                          <Node Class="PluginBehaviac.Nodes.Action" Enable="true" HasOwnPrefabData="false" Id="27" Method="Self.behaviac::Agent::LogMessage(&quot;Select：害是合法点&quot;)" PrefabName="" PrefabNodeId="-1" ResultFunctor="&quot;&quot;" ResultOption="BT_FAILURE">
+                            <Comment Background="NoColor" Text="" />
+                          </Node>
+                          <Node Class="PluginBehaviac.Nodes.Assignment" CastRight="false" Enable="true" HasOwnPrefabData="false" Id="28" Opl="VInt3 Self.SGame::InGame::GameLogic::ObjAgent::testVar" Opr="const VInt3 {x=1;y=0;z=1;}" PrefabName="" PrefabNodeId="-1">
+                            <Comment Background="NoColor" Text="" />
+                          </Node>
+                        </Connector>
+                      </Node>
+                      <Node Class="PluginBehaviac.Nodes.SelectorLoop" Enable="true" HasOwnPrefabData="false" Id="29" PrefabName="" PrefabNodeId="-1" ResetChildren="false">
+                        <Comment Background="NoColor" Text="" />
+                        <Connector Identifier="GenericChildren">
+                          <Node Class="PluginBehaviac.Nodes.WithPrecondition" Enable="true" HasOwnPrefabData="false" Id="30" PrefabName="" PrefabNodeId="-1">
+                            <Comment Background="NoColor" Text="" />
+                            <Connector Identifier="Precondition">
+                              <Node Class="PluginBehaviac.Nodes.Condition" Enable="true" HasOwnPrefabData="false" Id="31" Operator="Equal" Opl="Self.SGame::InGame::GameLogic::BTBaseAgent::IsInValidVint3(VInt3 Self.SGame::InGame::GameLogic::ObjAgent::testVar)" Opr="const bool true" PrefabName="" PrefabNodeId="-1">
+                                <Comment Background="NoColor" Text="" />
+                              </Node>
+                            </Connector>
+                            <Connector Identifier="Action">
+                              <Node Class="PluginBehaviac.Nodes.Sequence" Enable="true" HasOwnPrefabData="false" Id="18" PrefabName="" PrefabNodeId="-1">
+                                <Comment Background="NoColor" Text="" />
+                                <Connector Identifier="GenericChildren">
+                                  <Node Class="PluginBehaviac.Nodes.Action" Enable="true" HasOwnPrefabData="false" Id="40" Method="Self.behaviac::Agent::LogMessage(&quot;分支1-1 ：准备润&quot;)" PrefabName="" PrefabNodeId="-1" ResultFunctor="&quot;&quot;" ResultOption="BT_FAILURE">
+                                    <Comment Background="NoColor" Text="" />
+                                  </Node>
+                                  <Node Class="PluginBehaviac.Nodes.Action" Enable="true" HasOwnPrefabData="false" Id="37" Method="Self.SGame::InGame::GameLogic::ObjAgent::PlayAgeAction(&quot;balabala&quot;)" PrefabName="" PrefabNodeId="-1" ResultFunctor="&quot;&quot;" ResultOption="BT_INVALID">
+                                    <Comment Background="NoColor" Text="" />
+                                  </Node>
+                                </Connector>
+                              </Node>
+                            </Connector>
+                          </Node>
+                          <Node Class="PluginBehaviac.Nodes.WithPrecondition" Enable="true" HasOwnPrefabData="false" Id="32" PrefabName="" PrefabNodeId="-1">
+                            <Comment Background="NoColor" Text="" />
+                            <Connector Identifier="Precondition">
+                              <Node Class="PluginBehaviac.Nodes.Action" Enable="true" HasOwnPrefabData="false" Id="33" Method="Self.SGame::InGame::GameLogic::ObjAgent::IsOffline()" PrefabName="" PrefabNodeId="-1" ResultFunctor="&quot;&quot;" ResultOption="BT_INVALID">
+                                <Comment Background="NoColor" Text="" />
+                              </Node>
+                            </Connector>
+                            <Connector Identifier="Action">
+                              <Node Class="PluginBehaviac.Nodes.Selector" Enable="true" HasOwnPrefabData="false" Id="34" PrefabName="" PrefabNodeId="-1">
+                                <Comment Background="NoColor" Text="" />
+                                <Connector Identifier="GenericChildren">
+                                  <Node Class="PluginBehaviac.Nodes.Condition" Enable="true" HasOwnPrefabData="false" Id="35" Operator="Equal" Opl="Self.SGame::InGame::GameLogic::BTBaseAgent::IsInValidVint3(VInt3 Self.SGame::InGame::GameLogic::ObjAgent::testVar)" Opr="const bool true" PrefabName="" PrefabNodeId="-1">
+                                    <Comment Background="NoColor" Text="" />
+                                  </Node>
+                                  <Node Class="PluginBehaviac.Nodes.Action" Enable="true" HasOwnPrefabData="false" Id="36" Method="Self.behaviac::Agent::LogMessage(&quot;分支1-2 ：准备润&quot;)" PrefabName="" PrefabNodeId="-1" ResultFunctor="&quot;&quot;" ResultOption="BT_FAILURE">
+                                    <Comment Background="NoColor" Text="" />
+                                  </Node>
+                                  <Node Class="PluginBehaviac.Nodes.Action" Enable="true" HasOwnPrefabData="false" Id="39" Method="Self.SGame::InGame::GameLogic::ObjAgent::PlayAgeAction(&quot;balabala&quot;)" PrefabName="" PrefabNodeId="-1" ResultFunctor="&quot;&quot;" ResultOption="BT_INVALID">
+                                    <Comment Background="NoColor" Text="" />
+                                  </Node>
+                                </Connector>
+                              </Node>
+                            </Connector>
+                          </Node>
+                        </Connector>
+                      </Node>
+                    </Connector>
+                  </Node>
+                </Connector>
+              </Node>
+              <Node Class="PluginBehaviac.Nodes.WithPrecondition" Enable="true" HasOwnPrefabData="false" Id="13" PrefabName="" PrefabNodeId="-1">
+                <Comment Background="NoColor" Text="" />
+                <Connector Identifier="Precondition">
+                  <Node Class="PluginBehaviac.Nodes.Action" Enable="true" HasOwnPrefabData="false" Id="10" Method="Self.SGame::InGame::GameLogic::ObjAgent::IsOffline()" PrefabName="" PrefabNodeId="-1" ResultFunctor="&quot;&quot;" ResultOption="BT_INVALID">
+                    <Comment Background="NoColor" Text="" />
+                  </Node>
+                </Connector>
+                <Connector Identifier="Action">
+                  <Node Class="PluginBehaviac.Nodes.Selector" Enable="true" HasOwnPrefabData="false" Id="15" PrefabName="" PrefabNodeId="-1">
+                    <Comment Background="NoColor" Text="" />
+                    <Connector Identifier="GenericChildren">
+                      <Node Class="PluginBehaviac.Nodes.Condition" Enable="true" HasOwnPrefabData="false" Id="16" Operator="Equal" Opl="Self.SGame::InGame::GameLogic::BTBaseAgent::IsInValidVint3(VInt3 Self.SGame::InGame::GameLogic::ObjAgent::testVar)" Opr="const bool true" PrefabName="" PrefabNodeId="-1">
+                        <Comment Background="NoColor" Text="" />
+                      </Node>
+                      <Node Class="PluginBehaviac.Nodes.Action" Enable="true" HasOwnPrefabData="false" Id="38" Method="Self.behaviac::Agent::LogMessage(&quot;分支2 ：准备润&quot;)" PrefabName="" PrefabNodeId="-1" ResultFunctor="&quot;&quot;" ResultOption="BT_FAILURE">
+                        <Comment Background="NoColor" Text="" />
+                      </Node>
+                      <Node Class="PluginBehaviac.Nodes.Action" Enable="true" HasOwnPrefabData="false" Id="17" Method="Self.SGame::InGame::GameLogic::ObjAgent::PlayAgeAction(&quot;balabala&quot;)" PrefabName="" PrefabNodeId="-1" ResultFunctor="&quot;&quot;" ResultOption="BT_INVALID">
+                        <Comment Background="NoColor" Text="" />
+                      </Node>
+                    </Connector>
+                  </Node>
+                </Connector>
+              </Node>
+            </Connector>
+          </Node>
+        </Connector>
+      </Node>
+    </Connector>
+  </Node>
+</Behavior>

@@ -1,0 +1,22 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BehaviacXmlTrans", "BehaviacXmlTrans\BehaviacXmlTrans.csproj", "{86C93DF9-40D8-4840-A3BF-2BF8FC07C280}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BehaviacRunTest", "BehaviacRunTest\BehaviacRunTest.csproj", "{90BB21BD-5A51-4FA2-8147-CAEB96F1814E}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{86C93DF9-40D8-4840-A3BF-2BF8FC07C280}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{86C93DF9-40D8-4840-A3BF-2BF8FC07C280}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{86C93DF9-40D8-4840-A3BF-2BF8FC07C280}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{86C93DF9-40D8-4840-A3BF-2BF8FC07C280}.Release|Any CPU.Build.0 = Release|Any CPU
+		{90BB21BD-5A51-4FA2-8147-CAEB96F1814E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{90BB21BD-5A51-4FA2-8147-CAEB96F1814E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{90BB21BD-5A51-4FA2-8147-CAEB96F1814E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{90BB21BD-5A51-4FA2-8147-CAEB96F1814E}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal

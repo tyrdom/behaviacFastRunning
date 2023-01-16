@@ -1,0 +1,15 @@
+E:\workspace\testDotNet\BehavicOut\BehaviacRunTest\bin\Debug\net6.0\BehaviacRunTest.exe
+E:\workspace\testDotNet\BehavicOut\BehaviacRunTest\bin\Debug\net6.0\BehaviacRunTest.deps.json
+E:\workspace\testDotNet\BehavicOut\BehaviacRunTest\bin\Debug\net6.0\BehaviacRunTest.runtimeconfig.json
+E:\workspace\testDotNet\BehavicOut\BehaviacRunTest\bin\Debug\net6.0\BehaviacRunTest.dll
+E:\workspace\testDotNet\BehavicOut\BehaviacRunTest\bin\Debug\net6.0\BehaviacRunTest.pdb
+E:\workspace\testDotNet\BehavicOut\BehaviacRunTest\obj\Debug\net6.0\BehaviacRunTest.csproj.AssemblyReference.cache
+E:\workspace\testDotNet\BehavicOut\BehaviacRunTest\obj\Debug\net6.0\BehaviacRunTest.GeneratedMSBuildEditorConfig.editorconfig
+E:\workspace\testDotNet\BehavicOut\BehaviacRunTest\obj\Debug\net6.0\BehaviacRunTest.AssemblyInfoInputs.cache
+E:\workspace\testDotNet\BehavicOut\BehaviacRunTest\obj\Debug\net6.0\BehaviacRunTest.AssemblyInfo.cs
+E:\workspace\testDotNet\BehavicOut\BehaviacRunTest\obj\Debug\net6.0\BehaviacRunTest.csproj.CoreCompileInputs.cache
+E:\workspace\testDotNet\BehavicOut\BehaviacRunTest\obj\Debug\net6.0\BehaviacRunTest.dll
+E:\workspace\testDotNet\BehavicOut\BehaviacRunTest\obj\Debug\net6.0\refint\BehaviacRunTest.dll
+E:\workspace\testDotNet\BehavicOut\BehaviacRunTest\obj\Debug\net6.0\BehaviacRunTest.pdb
+E:\workspace\testDotNet\BehavicOut\BehaviacRunTest\obj\Debug\net6.0\BehaviacRunTest.genruntimeconfig.cache
+E:\workspace\testDotNet\BehavicOut\BehaviacRunTest\obj\Debug\net6.0\ref\BehaviacRunTest.dll

@@ -1,0 +1,15 @@
+E:\workspace\testDotNet\BehavicOut\ConsoleApp1\obj\Debug\net6.0\ConsoleApp1.csproj.AssemblyReference.cache
+E:\workspace\testDotNet\BehavicOut\ConsoleApp1\obj\Debug\net6.0\ConsoleApp1.GeneratedMSBuildEditorConfig.editorconfig
+E:\workspace\testDotNet\BehavicOut\ConsoleApp1\obj\Debug\net6.0\ConsoleApp1.AssemblyInfoInputs.cache
+E:\workspace\testDotNet\BehavicOut\ConsoleApp1\obj\Debug\net6.0\ConsoleApp1.AssemblyInfo.cs
+E:\workspace\testDotNet\BehavicOut\ConsoleApp1\obj\Debug\net6.0\ConsoleApp1.csproj.CoreCompileInputs.cache
+E:\workspace\testDotNet\BehavicOut\ConsoleApp1\bin\Debug\net6.0\ConsoleApp1.exe
+E:\workspace\testDotNet\BehavicOut\ConsoleApp1\bin\Debug\net6.0\ConsoleApp1.deps.json
+E:\workspace\testDotNet\BehavicOut\ConsoleApp1\bin\Debug\net6.0\ConsoleApp1.runtimeconfig.json
+E:\workspace\testDotNet\BehavicOut\ConsoleApp1\bin\Debug\net6.0\ConsoleApp1.dll
+E:\workspace\testDotNet\BehavicOut\ConsoleApp1\bin\Debug\net6.0\ConsoleApp1.pdb
+E:\workspace\testDotNet\BehavicOut\ConsoleApp1\obj\Debug\net6.0\ConsoleApp1.dll
+E:\workspace\testDotNet\BehavicOut\ConsoleApp1\obj\Debug\net6.0\refint\ConsoleApp1.dll
+E:\workspace\testDotNet\BehavicOut\ConsoleApp1\obj\Debug\net6.0\ConsoleApp1.pdb
+E:\workspace\testDotNet\BehavicOut\ConsoleApp1\obj\Debug\net6.0\ConsoleApp1.genruntimeconfig.cache
+E:\workspace\testDotNet\BehavicOut\ConsoleApp1\obj\Debug\net6.0\ref\ConsoleApp1.dll
