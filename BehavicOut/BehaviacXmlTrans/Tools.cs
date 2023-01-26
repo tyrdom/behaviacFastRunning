@@ -10,8 +10,9 @@ public static class Tools
         var strings = path.Split(Path.DirectorySeparatorChar);
         var valueTuple = strings.Aggregate(("", false), (tuple, s1) =>
         {
-            var aa = tuple.Item2 ? tuple.Item1 + "_" + s1 : tuple.Item1;
-            var bb = s1 == Configs.EditDir || tuple.Item2;
+            var (item1, item2) = tuple;
+            var aa = item2 ? item1 + "_" + s1 : item1;
+            var bb = s1 == Configs.EditDir || item2;
             return (aa, bb);
         });
         var fileName1 = valueTuple.Item1;
