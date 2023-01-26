@@ -91,7 +91,7 @@ public static class Tools
         return head + switchString + res + "\n}";
     }
 
-    private static string TransNode(XElement node, int parentId, int grandParentId, string parentTypeString,
+    private static string TransNode(XElement node, int parentId, int extraId, string parentTypeString,
         string agentObjName, int runningGoNode,
         out string treeStatusValues,
         out string headRunningSwitch, out string nodeResultInitString)
@@ -125,7 +125,7 @@ public static class Tools
 
 
         res = res + "//" + idString + "\n";
-        var xElements = node.Elements("Connector");
+        var xElements = node.Elements("Connector").ToArray();
 
 
         //与父节点关系
@@ -164,15 +164,14 @@ public static class Tools
                 break;
             case "PluginBehaviac.Nodes.IfElse_condition":
 
-                tail = $"if({resultVarString} == {CSharpStrings.Success})\n{{\n";
+                tail = $"if({resultVarString} == {CSharpStrings.Fail})\n{{goto Node{extraId}Enter;\n}}";
                 break;
             case "PluginBehaviac.Nodes.IfElse_if":
 
-                tail = parentVarString + " = " + resultVarString + ";";
+                tail = parentVarString + " = " + resultVarString + $";\ngoto Node{parentId}Out;\n";
                 break;
             case "PluginBehaviac.Nodes.IfElse_else":
-                head = "\n}\nelse\n{\n";
-                tail = parentVarString + " = " + resultVarString + ";\n}\n";
+                tail = parentVarString + " = " + resultVarString + ";\n";
                 break;
             case "PluginBehaviac.Nodes.WithPreconditionPrecondition":
 
@@ -182,7 +181,7 @@ public static class Tools
                        + $"goto {parentEndStringGoto}"
                        + "}\n"
                        + "//如果切换了分支后再通过，那么会重置running下面running的节点到-1\n"
-                       + $"if (Node{grandParentId}WhichBranchRunning != {parentId})\n{{\nNode{parentId}RunningNode = -1;\n}}";
+                       + $"if (Node{extraId}WhichBranchRunning != {parentId})\n{{\nNode{parentId}RunningNode = -1;\n}}";
                 // {
                 //     Node13RunningNode = -1;
                 // }
@@ -253,6 +252,12 @@ public static class Tools
                     ? $"private {CSharpStrings.BtStatusEnumName} {resultVarString} {{ get; set; }}\n"
                     : "";
                 headResult = needResult ? resultVarString + $" = {CSharpStrings.Success};\n" : "\n";
+                var orDefault = xElements.FirstOrDefault(x =>
+                {
+                    return (x.Attribute("Identifier")?.Value ?? throw new NullReferenceException()) == "_else";
+                }) ?? throw new ArgumentOutOfRangeException();
+                var value1 = orDefault.Element("Node")?.Attribute("Id")?.Value ?? throw new NullReferenceException();
+                extraId = int.Parse(value1);
                 break;
             case "PluginBehaviac.Nodes.Condition":
                 headResult = NodeCondition(node, needResult, resultVarString,
@@ -365,6 +370,7 @@ public static class Tools
                 acp2 += $"private int {idString}WhichBranchRunning {{ get; set; }} = -1;\n";
                 headResult = "\n";
                 tail = "";
+                extraId = intId;
                 break;
             case "PluginBehaviac.Nodes.WithPrecondition":
                 acp2 = needResult
@@ -386,7 +392,7 @@ public static class Tools
         // 向子树递归收集
         foreach (var connector in xElements)
         {
-            var s1 = TransConnector(connector, intId, parentId, nodeType, agentObjName, runningGoNode,
+            var s1 = TransConnector(connector, intId, extraId, nodeType, agentObjName, runningGoNode,
                 out var acp,
                 out var aRunningSwitch,
                 out var irs);
@@ -448,7 +454,7 @@ public static class Tools
     }
 
 
-    private static string TransConnector(XElement connector, int parentId, int grandParentId, string parentString,
+    private static string TransConnector(XElement connector, int parentId, int extraId, string parentString,
         string agentObjName,
         int nowCheckRunningNode,
         out string acp,
@@ -485,7 +491,7 @@ public static class Tools
         irs = "";
         foreach (var xElement in xElements)
         {
-            var transNode = TransNode(xElement, parentId, grandParentId, fixParentString, agentObjName,
+            var transNode = TransNode(xElement, parentId, extraId, fixParentString, agentObjName,
                                 nowCheckRunningNode,
                                 out var aStr, out var ars,
                                 out var airs) +
