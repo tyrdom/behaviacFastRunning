@@ -19,8 +19,8 @@ SkillSlotType testEnum {get;set;} = SkillSlotType.SLOT_SKILL_0;
 AISkillTypeTag EnumTest2 {get;set;} = AISkillTypeTag.None;
 
 // BehaviorTreeStatus
-
-private int  Node0RunningNode{get;set;} = -1;
+private uint NowLocalTick { get; set; } = 0;
+private int Node0RunningNode{get;set;} = -1;
 private EBTStatus Node3Result { get; set; }
 private EBTStatus Node2Result { get; set; }
 private EBTStatus Node43Result { get; set; }

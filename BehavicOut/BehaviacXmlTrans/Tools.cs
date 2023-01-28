@@ -67,14 +67,15 @@ public static class Tools
         out string treeStatusParamsAndAgentObj)
     {
         treeStatusParamsAndAgentObj = "\n";
-        var head = $"public {CSharpStrings.BtStatusEnumName} Tick()\n{{\n";
+        var head = $"public {CSharpStrings.BtStatusEnumName} Tick()\n{{\n NowLocalTick++;\n";
         var res = "";
         var node = xElement.Elements().FirstOrDefault(x => x.Name == "Node") ?? throw new NullReferenceException();
         var runningSwitch = "";
         var value = node.Attribute("Id")?.Value ?? throw new NullReferenceException();
         var result = int.TryParse(value, out var ii) ? ii : throw new ArgumentOutOfRangeException();
         var rootRunningNodeString = " Node" + result + "RunningNode";
-        var rootStatus = $"\nprivate int {rootRunningNodeString}{{get;set;}} = -1;\n";
+        const string tickCount = "\nprivate int NowLocalTick { get; set; } = -1;\n";
+        var rootStatus = $"{tickCount}\nprivate int {rootRunningNodeString}{{get;set;}} = -1;\n";
         var s = TransNode(node, result, -1, "Root", agentObjName, result,
             out var tsp,
             out var aRunningSwitch, out var nodeResultInitString) + "\n";
@@ -147,7 +148,7 @@ public static class Tools
                 needResult = false;
                 break;
             case "PluginBehaviac.Nodes.Sequence":
-
+                
                 tail = $"if({resultVarString} == {CSharpStrings.Fail})\n"
                        + "{\n"
                        + $"{parentVarString} = {CSharpStrings.Fail};\n"
@@ -155,7 +156,7 @@ public static class Tools
                        + "}";
                 break;
             case "PluginBehaviac.Nodes.Selector":
-                needResult = true;
+                
                 tail = $"if({resultVarString} == {CSharpStrings.Success})\n"
                        + "{\n"
                        + $"{parentVarString} = {CSharpStrings.Success};\n"
@@ -223,6 +224,9 @@ public static class Tools
         var acp2 = "";
         var outPutString = "";
         var headResult = "";
+        var goNode = "Node" + runningGoNode;
+        var runningNodeString =
+            goNode + "RunningNode";
         switch (nodeType)
         {
             case "PluginBehaviac.Nodes.DecoratorAlwaysSuccess":
@@ -273,21 +277,22 @@ public static class Tools
                 acp2 = needResult
                     ? $"private {CSharpStrings.BtStatusEnumName} {resultVarString} {{ get; set; }}\n"
                     : "";
-                headResult = needResult ? resultVarString + $" = {CSharpStrings.Success};\n" : "\n";
+                
                 var countString = node.Attribute("Count")?.Value;
                 headRunningSwitch += $"case {id}:\n" + $"goto {idString}Enter;\n";
                 //Node13Result= EBTStatus.BT_RUNNING;
                 // goto Node13Out;
-                var continueString = $"nowRunningNode = {id};\n"
-                                     + $"return {resultVarString};\n";
+                var continueString = $"{runningNodeString} = {id};\n"
+                                     + $"goto Node{runningGoNode}Out;\n";
                 if (countString == "const int -1")
                 {
                     outPutString = continueString;
+                    headResult = needResult ? resultVarString + $" = {CSharpStrings.Running};\n" : "\n";
                 }
                 else
                 {
-                    treeStatusValues += idString + "nowRunTime { get; set; } = 0;\n";
-                    treeStatusValues += idString + "maxRunTime { get; set; } = " + countString + ";\n";
+                    acp2 += idString + "nowRunTime { get; set; } = 0;\n";
+                    acp2 += idString + "maxRunTime { get; set; } = " + countString + ";\n";
                     outPutString = "if(" + idString + "nowRunTime <" + idString + "maxRunTime)\n{" + continueString +
                                    "}";
                 }
@@ -308,22 +313,19 @@ public static class Tools
 
                 if (findReturnType == "behaviac::EBTStatus")
                 {
-                    var goNode = "Node" + runningGoNode;
-                    var rootRunningNodeString =
-                        goNode + "RunningNode";
                     var varString = resultVarString + " = " + methodName + ";\n";
-                    var runningNowrunningnode =
+                    var runningNow =
                         " if (" + resultVarString + $" == {CSharpStrings.Running} )\n" +
-                        $"{{\n{rootRunningNodeString} = " + id + ";\n" +
+                        $"{{\n{runningNodeString} = " + id + ";\n" +
                         // Node13Result= EBTStatus.BT_RUNNING;
                         // goto Node13Out;
                         $"{goNode}Result = {CSharpStrings.Running};\n"
                         + $"goto {goNode}Out;\n"
                         + "}\n"
-                        + $"{rootRunningNodeString} = -1;";
+                        + $"{runningNodeString} = -1;\n";
 
                     headRunningSwitch += $"case {id}:\n" + $"goto {idString}Enter;\n";
-                    body = varString + runningNowrunningnode;
+                    body = varString + runningNow;
                 }
                 else
                 {
@@ -381,7 +383,28 @@ public static class Tools
                 acp2 += $"private int {idString}RunningNode {{ get; set; }} = -1;\n";
                 headResult = resultVarString + $" = {CSharpStrings.Invalid};\n";
                 break;
+            case "PluginBehaviac.Nodes.WaitFrames":
+                acp2 =
+                    $"private {CSharpStrings.BtStatusEnumName} {resultVarString} {{ get; set; }}\n";
 
+                acp2 += $"private int {idString}StartFrame {{ get; set; }} = -1;\n";
+                var waitTickString = node.Attribute("Frames")?.Value ?? throw new NullReferenceException();
+                var waitTick = CSharpStrings.RemoveParameterAndActionHead(waitTickString);
+                headResult = $"{idString}StartFrame = NowLocalTick;\n";
+                body = $"if (NowLocalTick - {idString}StartFrame + 1 >= {waitTick})\n"
+                       + $"{{\n{runningNodeString} = {intId};\n "
+                       + $"{goNode}Result = {CSharpStrings.Running};\n"
+                       + $"goto {goNode}Out;\n"
+                       + "}\n"+ $"{resultVarString} = {CSharpStrings.Success};\n";
+                // if (NowLocalTick - Node49StartFrame + 1 >= 100)
+                // {
+                //     Node0RunningNode = 44;
+                //     Node0Result = EBTStatus.BT_RUNNING;
+                //     goto Node0Out;
+                // }
+                //
+                // Node49Result = EBTStatus.BT_SUCCESS;
+                break;
 
             default:
                 throw new ArgumentException($"Cant Read  {id} :Type {nodeType}");
@@ -402,7 +425,7 @@ public static class Tools
             nodeResultInitString += irs;
         }
 
-        s = "\n" + s +
+        s = s==""?"": "\n" + s +
             "\n";
 
         var localS = "";
@@ -413,7 +436,7 @@ public static class Tools
         }
 
         treeStatusValues += acp2;
-        res += localS + head + enterString + headResult + body + s + outString + outPutString + tail;
+        res += localS + head + headResult + enterString + body + s + outString + outPutString + tail;
         return res;
     }
 
