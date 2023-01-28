@@ -20,16 +20,28 @@ AISkillTypeTag EnumTest2 {get;set;} = AISkillTypeTag.None;
 
 // BehaviorTreeStatus
 
- int Node0RunningNode{get;set;} = -1;
+private int  Node0RunningNode{get;set;} = -1;
 private EBTStatus Node3Result { get; set; }
 private EBTStatus Node2Result { get; set; }
+private EBTStatus Node43Result { get; set; }
+private EBTStatus Node44Result { get; set; }
+private EBTStatus Node45Result { get; set; }
+private EBTStatus Node42Result { get; set; }
 private EBTStatus Node8Result { get; set; }
 private EBTStatus Node7Result { get; set; }
 private EBTStatus Node4Result { get; set; }
+private EBTStatus Node38Result { get; set; }
+private EBTStatus Node10Result { get; set; }
+private EBTStatus Node16Result { get; set; }
+private EBTStatus Node17Result { get; set; }
+private EBTStatus Node13Result { get; set; }
+private int Node13RunningNode { get; set; } = -1;
 private EBTStatus Node14Result { get; set; }
+private EBTStatus Node41Result { get; set; }
 private EBTStatus Node23Result { get; set; }
 private EBTStatus Node24Result { get; set; }
 private EBTStatus Node26Result { get; set; }
+private EBTStatus Node15Result { get; set; }
 private EBTStatus Node27Result { get; set; }
 private EBTStatus Node25Result { get; set; }
 private EBTStatus Node31Result { get; set; }
@@ -49,19 +61,14 @@ private int Node29WhichBranchRunning { get; set; } = -1;
 private EBTStatus Node19Result { get; set; }
 private EBTStatus Node12Result { get; set; }
 private int Node12RunningNode { get; set; } = -1;
-private EBTStatus Node10Result { get; set; }
-private EBTStatus Node16Result { get; set; }
-private EBTStatus Node38Result { get; set; }
-private EBTStatus Node17Result { get; set; }
-private EBTStatus Node15Result { get; set; }
-private EBTStatus Node13Result { get; set; }
-private int Node13RunningNode { get; set; } = -1;
 private int Node11WhichBranchRunning { get; set; } = -1;
 private EBTStatus Node0Result { get; set; }
 public EBTStatus Tick()
 {
-switch (Node0RunningNode)
+switch ( Node0RunningNode)
 {
+case 44:
+goto Node44Enter;
 case 10:
 goto Node10Enter;
 
@@ -69,8 +76,8 @@ goto Node10Enter;
 //
 //PluginBehaviac.Nodes.Sequence
 //Node0
-Node0Result = EBTStatus.BT_INVALID;
 Node0Enter:
+Node0Result = EBTStatus.BT_INVALID;
 
 //
 //PluginBehaviac.Nodes.Assignment
@@ -102,10 +109,10 @@ Node9Out:
 //
 //PluginBehaviac.Nodes.Condition
 //Node3
-Node3Result = EBTStatus.BT_SUCCESS;
 Node3Enter:
+Node3Result = EBTStatus.BT_SUCCESS;
 Node3Result = ObjAgent.IsInValidVint3(testVar) == false ? EBTStatus.BT_SUCCESS : EBTStatus.BT_FAILURE;
-;
+
 
 
 Node3Out:
@@ -129,18 +136,73 @@ Node0Result = EBTStatus.BT_FAILURE;
 goto Node0Out;
 }
 //
+//PluginBehaviac.Nodes.IfElse
+//Node42
+Node42Enter:
+Node42Result = EBTStatus.BT_SUCCESS;
+
+//
+//PluginBehaviac.Nodes.Condition
+//Node43
+Node43Enter:
+Node43Result = EBTStatus.BT_SUCCESS;
+Node43Result = ObjAgent.IsInValidVint3(testVar) == false ? EBTStatus.BT_SUCCESS : EBTStatus.BT_FAILURE;
+
+
+
+Node43Out:
+if(Node43Result == EBTStatus.BT_FAILURE)
+{
+goto Node45Enter;
+}
+//
+//PluginBehaviac.Nodes.Action
+//Node44
+Node44Enter:
+Node44Result = ObjAgent.PlayAgeAction("balabala");
+ if (Node44Result == EBTStatus.BT_RUNNING )
+{
+Node0RunningNode = 44;
+Node0Result = EBTStatus.BT_RUNNING;
+goto Node0Out;
+}
+Node0RunningNode = -1;
+
+Node44Out:
+Node42Result = Node44Result;
+goto Node42Out;
+
+//
+//PluginBehaviac.Nodes.Action
+//Node45
+Node45Enter:
+ObjAgent.LogMessage("条件执行假：无效点");
+Node45Result = EBTStatus.BT_SUCCESS;
+
+
+Node45Out:
+Node42Result = Node45Result;
+
+
+Node42Out:
+if(Node42Result == EBTStatus.BT_FAILURE)
+{
+Node0Result = EBTStatus.BT_FAILURE;
+goto Node0Out;
+}
+//
 //PluginBehaviac.Nodes.Selector
 //Node4
-Node4Result = EBTStatus.BT_INVALID;
 Node4Enter:
+Node4Result = EBTStatus.BT_INVALID;
 
 //
 //PluginBehaviac.Nodes.Condition
 //Node8
-Node8Result = EBTStatus.BT_SUCCESS;
 Node8Enter:
+Node8Result = EBTStatus.BT_SUCCESS;
 Node8Result = ObjAgent.IsInValidVint3(testVar) == true ? EBTStatus.BT_SUCCESS : EBTStatus.BT_FAILURE;
-;
+
 
 
 Node8Out:
@@ -182,24 +244,112 @@ goto Node0Out;
 //
 //PluginBehaviac.Nodes.SelectorLoop
 //Node11
-
 Node11Enter:
+
+
+//
+//PluginBehaviac.Nodes.WithPrecondition
+//Node13
+Node13Enter:
+Node13Result = EBTStatus.BT_INVALID;
+
+//
+//PluginBehaviac.Nodes.Selector
+//Node16
+//选择监测条件
+Node16Enter:
+Node16Result = EBTStatus.BT_INVALID;
+
+//
+//PluginBehaviac.Nodes.Condition
+//Node38
+Node38Enter:
+Node38Result = EBTStatus.BT_SUCCESS;
+Node38Result = ObjAgent.IsInValidVint3(testVar) == false ? EBTStatus.BT_SUCCESS : EBTStatus.BT_FAILURE;
+
+
+
+Node38Out:
+if(Node38Result == EBTStatus.BT_SUCCESS)
+{
+Node16Result = EBTStatus.BT_SUCCESS;
+goto Node16Out;
+}
+//
+//PluginBehaviac.Nodes.Action
+//Node10
+Node10Enter:
+Node10Result = ObjAgent.IsOffline();
+ if (Node10Result == EBTStatus.BT_RUNNING )
+{
+Node0RunningNode = 10;
+Node0Result = EBTStatus.BT_RUNNING;
+goto Node0Out;
+}
+Node0RunningNode = -1;
+
+Node10Out:
+if(Node10Result == EBTStatus.BT_SUCCESS)
+{
+Node16Result = EBTStatus.BT_SUCCESS;
+goto Node16Out;
+}
+
+Node16Out:
+if(Node16Result == EBTStatus.BT_FAILURE)
+{
+goto Node13Out;
+}
+//如果切换了分支后再通过，那么会重置running下面running的节点到-1
+if (Node11WhichBranchRunning != 13)
+{
+Node13RunningNode = -1;
+}
+//
+//PluginBehaviac.Nodes.Action
+//Node17
+switch (Node13RunningNode)
+{
+case 17:
+goto Node17Enter;
+
+}
+//选择监测动作
+Node17Enter:
+Node17Result = ObjAgent.PlayAgeAction("balabala");
+ if (Node17Result == EBTStatus.BT_RUNNING )
+{
+Node13RunningNode = 17;
+Node13Result = EBTStatus.BT_RUNNING;
+goto Node13Out;
+}
+Node13RunningNode = -1;
+
+Node17Out:
+Node13Result = Node17Result;
+
+
+Node13Out:
+if(Node13Result != EBTStatus.BT_INVALID)
+{
+Node11WhichBranchRunning = Node13Result == EBTStatus.BT_RUNNING ? 13 : -1;
+goto Node11Out;
+}
 
 //
 //PluginBehaviac.Nodes.WithPrecondition
 //Node12
-//选择监测
-Node12Result = EBTStatus.BT_INVALID;
 Node12Enter:
+Node12Result = EBTStatus.BT_INVALID;
 
 //
 //PluginBehaviac.Nodes.Condition
 //Node14
 //选择监测条件
-Node14Result = EBTStatus.BT_SUCCESS;
 Node14Enter:
+Node14Result = EBTStatus.BT_SUCCESS;
 Node14Result = ObjAgent.IsInValidVint3(testVar) == true ? EBTStatus.BT_SUCCESS : EBTStatus.BT_FAILURE;
-;
+
 
 
 Node14Out:
@@ -217,13 +367,17 @@ Node12RunningNode = -1;
 //Node19
 switch (Node12RunningNode)
 {
+case 41:
+goto Node41Enter;
+case 15:
+goto Node15Enter;
 case 33:
 goto Node33Enter;
 
 }
 //选择监测动作
-Node19Result = EBTStatus.BT_INVALID;
 Node19Enter:
+Node19Result = EBTStatus.BT_INVALID;
 
 //
 //PluginBehaviac.Nodes.Assignment
@@ -253,12 +407,31 @@ TestInt = 0;
 Node22Out:
 
 //
+//PluginBehaviac.Nodes.Action
+//Node41
+Node41Enter:
+Node41Result = ObjAgent.PlayAgeAction("balabala");
+ if (Node41Result == EBTStatus.BT_RUNNING )
+{
+Node12RunningNode = 41;
+Node12Result = EBTStatus.BT_RUNNING;
+goto Node12Out;
+}
+Node12RunningNode = -1;
+
+Node41Out:
+if(Node41Result == EBTStatus.BT_FAILURE)
+{
+Node19Result = EBTStatus.BT_FAILURE;
+goto Node19Out;
+}
+//
 //PluginBehaviac.Nodes.Condition
 //Node23
-Node23Result = EBTStatus.BT_SUCCESS;
 Node23Enter:
+Node23Result = EBTStatus.BT_SUCCESS;
 Node23Result = ObjAgent.IsInValidVint3(testVar) == false ? EBTStatus.BT_SUCCESS : EBTStatus.BT_FAILURE;
-;
+
 
 
 Node23Out:
@@ -284,20 +457,39 @@ goto Node19Out;
 //
 //PluginBehaviac.Nodes.Selector
 //Node25
-Node25Result = EBTStatus.BT_INVALID;
 Node25Enter:
+Node25Result = EBTStatus.BT_INVALID;
 
 //
 //PluginBehaviac.Nodes.Condition
 //Node26
-Node26Result = EBTStatus.BT_SUCCESS;
 Node26Enter:
+Node26Result = EBTStatus.BT_SUCCESS;
 Node26Result = ObjAgent.IsInValidVint3(testVar) == true ? EBTStatus.BT_SUCCESS : EBTStatus.BT_FAILURE;
-;
+
 
 
 Node26Out:
 if(Node26Result == EBTStatus.BT_SUCCESS)
+{
+Node25Result = EBTStatus.BT_SUCCESS;
+goto Node25Out;
+}
+//
+//PluginBehaviac.Nodes.Action
+//Node15
+Node15Enter:
+Node15Result = ObjAgent.PlayAgeAction("balabala");
+ if (Node15Result == EBTStatus.BT_RUNNING )
+{
+Node12RunningNode = 15;
+Node12Result = EBTStatus.BT_RUNNING;
+goto Node12Out;
+}
+Node12RunningNode = -1;
+
+Node15Out:
+if(Node15Result == EBTStatus.BT_SUCCESS)
 {
 Node25Result = EBTStatus.BT_SUCCESS;
 goto Node25Out;
@@ -335,24 +527,23 @@ goto Node19Out;
 //
 //PluginBehaviac.Nodes.SelectorLoop
 //Node29
-
 Node29Enter:
+
 
 //
 //PluginBehaviac.Nodes.WithPrecondition
 //Node30
-//选择监测
-Node30Result = EBTStatus.BT_INVALID;
 Node30Enter:
+Node30Result = EBTStatus.BT_INVALID;
 
 //
 //PluginBehaviac.Nodes.Condition
 //Node31
 //选择监测条件
-Node31Result = EBTStatus.BT_SUCCESS;
 Node31Enter:
+Node31Result = EBTStatus.BT_SUCCESS;
 Node31Result = ObjAgent.IsInValidVint3(testVar) == true ? EBTStatus.BT_SUCCESS : EBTStatus.BT_FAILURE;
-;
+
 
 
 Node31Out:
@@ -375,8 +566,8 @@ goto Node37Enter;
 
 }
 //选择监测动作
-Node18Result = EBTStatus.BT_INVALID;
 Node18Enter:
+Node18Result = EBTStatus.BT_INVALID;
 
 //
 //PluginBehaviac.Nodes.Action
@@ -426,9 +617,8 @@ goto Node29Out;
 //
 //PluginBehaviac.Nodes.WithPrecondition
 //Node32
-//选择监测
-Node32Result = EBTStatus.BT_INVALID;
 Node32Enter:
+Node32Result = EBTStatus.BT_INVALID;
 
 //
 //PluginBehaviac.Nodes.Action
@@ -464,16 +654,16 @@ goto Node39Enter;
 
 }
 //选择监测动作
-Node34Result = EBTStatus.BT_INVALID;
 Node34Enter:
+Node34Result = EBTStatus.BT_INVALID;
 
 //
 //PluginBehaviac.Nodes.Condition
 //Node35
-Node35Result = EBTStatus.BT_SUCCESS;
 Node35Enter:
+Node35Result = EBTStatus.BT_SUCCESS;
 Node35Result = ObjAgent.IsInValidVint3(testVar) == true ? EBTStatus.BT_SUCCESS : EBTStatus.BT_FAILURE;
-;
+
 
 
 Node35Out:
@@ -539,110 +729,6 @@ Node12Out:
 if(Node12Result != EBTStatus.BT_INVALID)
 {
 Node11WhichBranchRunning = Node12Result == EBTStatus.BT_RUNNING ? 12 : -1;
-goto Node11Out;
-}
-
-//
-//PluginBehaviac.Nodes.WithPrecondition
-//Node13
-//选择监测
-Node13Result = EBTStatus.BT_INVALID;
-Node13Enter:
-
-//
-//PluginBehaviac.Nodes.Action
-//Node10
-//选择监测条件
-Node10Enter:
-Node10Result = ObjAgent.IsOffline();
- if (Node10Result == EBTStatus.BT_RUNNING )
-{
-Node0RunningNode = 10;
-Node0Result = EBTStatus.BT_RUNNING;
-goto Node0Out;
-}
-Node0RunningNode = -1;
-
-Node10Out:
-if(Node10Result == EBTStatus.BT_FAILURE)
-{
-goto Node13Out;
-}
-//如果切换了分支后再通过，那么会重置running下面running的节点到-1
-if (Node11WhichBranchRunning != 13)
-{
-Node13RunningNode = -1;
-}
-//
-//PluginBehaviac.Nodes.Selector
-//Node15
-switch (Node13RunningNode)
-{
-case 17:
-goto Node17Enter;
-
-}
-//选择监测动作
-Node15Result = EBTStatus.BT_INVALID;
-Node15Enter:
-
-//
-//PluginBehaviac.Nodes.Condition
-//Node16
-Node16Result = EBTStatus.BT_SUCCESS;
-Node16Enter:
-Node16Result = ObjAgent.IsInValidVint3(testVar) == true ? EBTStatus.BT_SUCCESS : EBTStatus.BT_FAILURE;
-;
-
-
-Node16Out:
-if(Node16Result == EBTStatus.BT_SUCCESS)
-{
-Node15Result = EBTStatus.BT_SUCCESS;
-goto Node15Out;
-}
-//
-//PluginBehaviac.Nodes.Action
-//Node38
-Node38Enter:
-ObjAgent.LogMessage("分支2 ：准备润");
-Node38Result = EBTStatus.BT_FAILURE;
-
-
-Node38Out:
-if(Node38Result == EBTStatus.BT_SUCCESS)
-{
-Node15Result = EBTStatus.BT_SUCCESS;
-goto Node15Out;
-}
-//
-//PluginBehaviac.Nodes.Action
-//Node17
-Node17Enter:
-Node17Result = ObjAgent.PlayAgeAction("balabala");
- if (Node17Result == EBTStatus.BT_RUNNING )
-{
-Node13RunningNode = 17;
-Node13Result = EBTStatus.BT_RUNNING;
-goto Node13Out;
-}
-Node13RunningNode = -1;
-
-Node17Out:
-if(Node17Result == EBTStatus.BT_SUCCESS)
-{
-Node15Result = EBTStatus.BT_SUCCESS;
-goto Node15Out;
-}
-
-Node15Out:
-Node13Result = Node15Result;
-
-
-Node13Out:
-if(Node13Result != EBTStatus.BT_INVALID)
-{
-Node11WhichBranchRunning = Node13Result == EBTStatus.BT_RUNNING ? 13 : -1;
 goto Node11Out;
 }
 

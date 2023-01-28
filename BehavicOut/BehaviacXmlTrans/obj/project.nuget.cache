@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "ITEvCcDfOJQ2YLzXmnXWxrfTm1B6DLAy9alFSftBWuKwJpTRvY0k64Ws8Xoykpw39q5J4S/kVvxtcVbpnT26ow==",
+  "dgSpecHash": "hTJ8K1ODH3Kg+c7DI52FtqFFZrSLvq+3Xt/O8TI0hLezt3p/o28at9dE0G/PhKcoTKe5DEgq2PmJCFC10AXkHg==",
   "success": true,
-  "projectFilePath": "/Users/tianhao/workspace/fastBehaviorRun/BehavicOut/BehaviacXmlTrans/BehaviacXmlTrans.csproj",
+  "projectFilePath": "E:\\workspace\\testDotNet\\behaviacRun\\BehavicOut\\BehaviacXmlTrans\\BehaviacXmlTrans.csproj",
   "expectedPackageFiles": [],
   "logs": []
 }

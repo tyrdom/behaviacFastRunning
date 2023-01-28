@@ -1,20 +1,20 @@
 {
   "format": 1,
   "restore": {
-    "/Users/tianhao/workspace/fastBehaviorRun/BehavicOut/BehaviacRunTest/BehaviacRunTest.csproj": {}
+    "E:\\workspace\\testDotNet\\behaviacRun\\BehavicOut\\BehaviacRunTest\\BehaviacRunTest.csproj": {}
   },
   "projects": {
-    "/Users/tianhao/workspace/fastBehaviorRun/BehavicOut/BehaviacRunTest/BehaviacRunTest.csproj": {
+    "E:\\workspace\\testDotNet\\behaviacRun\\BehavicOut\\BehaviacRunTest\\BehaviacRunTest.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/Users/tianhao/workspace/fastBehaviorRun/BehavicOut/BehaviacRunTest/BehaviacRunTest.csproj",
+        "projectUniqueName": "E:\\workspace\\testDotNet\\behaviacRun\\BehavicOut\\BehaviacRunTest\\BehaviacRunTest.csproj",
         "projectName": "BehaviacRunTest",
-        "projectPath": "/Users/tianhao/workspace/fastBehaviorRun/BehavicOut/BehaviacRunTest/BehaviacRunTest.csproj",
-        "packagesPath": "/Users/tianhao/.nuget/packages/",
-        "outputPath": "/Users/tianhao/workspace/fastBehaviorRun/BehavicOut/BehaviacRunTest/obj/",
+        "projectPath": "E:\\workspace\\testDotNet\\behaviacRun\\BehavicOut\\BehaviacRunTest\\BehaviacRunTest.csproj",
+        "packagesPath": "C:\\Users\\win10\\.nuget\\packages\\",
+        "outputPath": "E:\\workspace\\testDotNet\\behaviacRun\\BehavicOut\\BehaviacRunTest\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "/Users/tianhao/.nuget/NuGet/NuGet.Config"
+          "C:\\Users\\win10\\AppData\\Roaming\\NuGet\\NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net6.0"
@@ -52,7 +52,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/6.0.200/RuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\6.0.201\\RuntimeIdentifierGraph.json"
         }
       }
     }

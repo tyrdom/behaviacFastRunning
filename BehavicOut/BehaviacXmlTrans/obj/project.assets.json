@@ -8,19 +8,19 @@
     "net6.0": []
   },
   "packageFolders": {
-    "/Users/tianhao/.nuget/packages/": {}
+    "C:\\Users\\win10\\.nuget\\packages\\": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "/Users/tianhao/workspace/fastBehaviorRun/BehavicOut/BehaviacXmlTrans/BehaviacXmlTrans.csproj",
+      "projectUniqueName": "E:\\workspace\\testDotNet\\behaviacRun\\BehavicOut\\BehaviacXmlTrans\\BehaviacXmlTrans.csproj",
       "projectName": "BehaviacXmlTrans",
-      "projectPath": "/Users/tianhao/workspace/fastBehaviorRun/BehavicOut/BehaviacXmlTrans/BehaviacXmlTrans.csproj",
-      "packagesPath": "/Users/tianhao/.nuget/packages/",
-      "outputPath": "/Users/tianhao/workspace/fastBehaviorRun/BehavicOut/BehaviacXmlTrans/obj/",
+      "projectPath": "E:\\workspace\\testDotNet\\behaviacRun\\BehavicOut\\BehaviacXmlTrans\\BehaviacXmlTrans.csproj",
+      "packagesPath": "C:\\Users\\win10\\.nuget\\packages\\",
+      "outputPath": "E:\\workspace\\testDotNet\\behaviacRun\\BehavicOut\\BehaviacXmlTrans\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
-        "/Users/tianhao/.nuget/NuGet/NuGet.Config"
+        "C:\\Users\\win10\\AppData\\Roaming\\NuGet\\NuGet.Config"
       ],
       "originalTargetFrameworks": [
         "net6.0"
@@ -58,7 +58,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/6.0.200/RuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\6.0.201\\RuntimeIdentifierGraph.json"
       }
     }
   }

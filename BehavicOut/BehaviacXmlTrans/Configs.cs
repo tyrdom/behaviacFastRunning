@@ -4,8 +4,8 @@ namespace BehaviacXmlTrans;
 
 public static class Configs
 {
-    // public static string Dir => "D:\\Client\\Project\\BTWorkspace";
-    public static string Dir => "/Users/tianhao/Library/CloudStorage/OneDrive-个人/技术策划/BTWorkSpace";
+    public static string Dir => "D:\\Client\\Project\\BTWorkspace";
+    // public static string Dir => "/Users/tianhao/Library/CloudStorage/OneDrive-个人/技术策划/BTWorkSpace";
 
     private static string LocalTestDir =>Path.GetDirectoryName(Path.GetDirectoryName(Path.GetDirectoryName(Environment.CurrentDirectory))) ??
                                          throw new Exception("cant find dir");

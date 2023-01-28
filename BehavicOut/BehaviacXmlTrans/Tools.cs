@@ -73,8 +73,8 @@ public static class Tools
         var runningSwitch = "";
         var value = node.Attribute("Id")?.Value ?? throw new NullReferenceException();
         var result = int.TryParse(value, out var ii) ? ii : throw new ArgumentOutOfRangeException();
-        var rootRunningNodeString = "Node" + result + "RunningNode";
-        var rootStatus = $"\n int {rootRunningNodeString}{{get;set;}} = -1;\n";
+        var rootRunningNodeString = " Node" + result + "RunningNode";
+        var rootStatus = $"\nprivate int {rootRunningNodeString}{{get;set;}} = -1;\n";
         var s = TransNode(node, result, -1, "Root", agentObjName, result,
             out var tsp,
             out var aRunningSwitch, out var nodeResultInitString) + "\n";
@@ -164,7 +164,7 @@ public static class Tools
                 break;
             case "PluginBehaviac.Nodes.IfElse_condition":
 
-                tail = $"if({resultVarString} == {CSharpStrings.Fail})\n{{goto Node{extraId}Enter;\n}}";
+                tail = $"if({resultVarString} == {CSharpStrings.Fail})\n{{\ngoto Node{extraId}Enter;\n}}";
                 break;
             case "PluginBehaviac.Nodes.IfElse_if":
 
@@ -201,7 +201,7 @@ public static class Tools
 
                 break;
             case "PluginBehaviac.Nodes.SelectorLoop":
-                head = "//选择监测\n";
+                head = "";
                 tail = $"if({resultVarString} != {CSharpStrings.Invalid})\n" +
                        "{\n"
                        // + $"{parentVarString} = {resultVarString};\n"
@@ -252,10 +252,10 @@ public static class Tools
                     ? $"private {CSharpStrings.BtStatusEnumName} {resultVarString} {{ get; set; }}\n"
                     : "";
                 headResult = needResult ? resultVarString + $" = {CSharpStrings.Success};\n" : "\n";
-                var orDefault = xElements.FirstOrDefault(x =>
-                {
-                    return (x.Attribute("Identifier")?.Value ?? throw new NullReferenceException()) == "_else";
-                }) ?? throw new ArgumentOutOfRangeException();
+                var orDefault =
+                    xElements.FirstOrDefault(x =>
+                        (x.Attribute("Identifier")?.Value ?? throw new NullReferenceException()) == "_else") ??
+                    throw new ArgumentOutOfRangeException();
                 var value1 = orDefault.Element("Node")?.Attribute("Id")?.Value ?? throw new NullReferenceException();
                 extraId = int.Parse(value1);
                 break;
@@ -413,7 +413,7 @@ public static class Tools
         }
 
         treeStatusValues += acp2;
-        res += localS + head + headResult + enterString + body + s + outString + outPutString + tail;
+        res += localS + head + enterString + headResult + body + s + outString + outPutString + tail;
         return res;
     }
 
@@ -449,7 +449,7 @@ public static class Tools
                  ConvertArmToFuncOrParam(agentObjName, right);
         bb = $"{bb} ? {CSharpStrings.Success} : {CSharpStrings.Fail};\n";
 
-        body = needResult ? resultVarString + $" = {bb};\n" : "";
+        body = needResult ? resultVarString + $" = {bb}\n" : "";
         return headResult;
     }
 
