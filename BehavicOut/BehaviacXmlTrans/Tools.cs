@@ -76,7 +76,7 @@ public static class Tools
         var rootRunningNodeString = " Node" + result + "RunningNode";
         const string tickCount = "\nprivate int NowLocalTick { get; set; } = -1;\n";
         var rootStatus = $"{tickCount}\nprivate int {rootRunningNodeString}{{get;set;}} = -1;\n";
-        var s = TransNode(node, result, -1, "Root", agentObjName, result,
+        var s = TransNode(node, result, -1, "Root", agentObjName, result, null,
             out var tsp,
             out var aRunningSwitch, out var nodeResultInitString) + "\n";
         var behaviortreestatus = "// BehaviorTreeStatus\n";
@@ -94,6 +94,7 @@ public static class Tools
 
     private static string TransNode(XElement node, int parentId, int extraId, string parentTypeString,
         string agentObjName, int runningGoNode,
+        ParallelNodeConfig? parentParallelNodeConfig,
         out string treeStatusValues,
         out string headRunningSwitch, out string nodeResultInitString)
     {
@@ -124,19 +125,20 @@ public static class Tools
         //     Console.Out.WriteLine($"{id}");
         // }
 
-
+        var runLabel = idString + "Run:\n";
+        var outLabel = idString + "Out:\n";
         res = res + "//" + idString + "\n";
         var xElements = node.Elements("Connector").ToArray();
 
 
         //与父节点关系
         var needResult = true;
-        var localswitch = false;
+        var localSwitch = false;
         var parentEndStringGoto = parentIdString + "Out;\n";
         var parentVarString = parentIdString + "Result";
         var resultVarString = idString + "Result";
         var tail = "";
-        var head = "";
+        var onEnter = "";
 
         switch (parentTypeString)
         {
@@ -147,8 +149,8 @@ public static class Tools
             case "PluginBehaviac.Nodes.DecoratorAlwaysSuccess":
                 needResult = false;
                 break;
-            case "PluginBehaviac.Nodes.Sequence":
-                
+            case "PluginBehaviac.Nodes.Sequence" or "PluginBehaviac.Nodes.And":
+
                 tail = $"if({resultVarString} == {CSharpStrings.Fail})\n"
                        + "{\n"
                        + $"{parentVarString} = {CSharpStrings.Fail};\n"
@@ -156,7 +158,7 @@ public static class Tools
                        + "}";
                 break;
             case "PluginBehaviac.Nodes.Selector":
-                
+
                 tail = $"if({resultVarString} == {CSharpStrings.Success})\n"
                        + "{\n"
                        + $"{parentVarString} = {CSharpStrings.Success};\n"
@@ -165,7 +167,7 @@ public static class Tools
                 break;
             case "PluginBehaviac.Nodes.IfElse_condition":
 
-                tail = $"if({resultVarString} == {CSharpStrings.Fail})\n{{\ngoto Node{extraId}Enter;\n}}";
+                tail = $"if({resultVarString} == {CSharpStrings.Fail})\n{{\ngoto Node{extraId}Run;\n}}";
                 break;
             case "PluginBehaviac.Nodes.IfElse_if":
 
@@ -176,11 +178,12 @@ public static class Tools
                 break;
             case "PluginBehaviac.Nodes.WithPreconditionPrecondition":
 
-                head = "//选择监测条件\n";
+                onEnter = "//选择监测条件之下\n";
                 tail = $"if({resultVarString} == {CSharpStrings.Fail})\n" +
                        "{\n"
                        + $"goto {parentEndStringGoto}"
                        + "}\n"
+                       + $"Node{extraId}Result = {CSharpStrings.Success};\n"
                        + "//如果切换了分支后再通过，那么会重置running下面running的节点到-1\n"
                        + $"if (Node{extraId}WhichBranchRunning != {parentId})\n{{\nNode{parentId}RunningNode = -1;\n}}";
                 // {
@@ -189,20 +192,17 @@ public static class Tools
                 break;
             case "PluginBehaviac.Nodes.WithPreconditionAction":
                 runningGoNode = parentId;
-                head = "//选择监测动作\n";
+                onEnter = "//选择监测动作之下\n";
 
-                localswitch = true;
+                localSwitch = true;
                 // {
                 //     case 17:
                 //         goto Node17Enter;
                 // }
-
-
                 tail = $"{parentVarString} = {resultVarString};\n";
-
                 break;
             case "PluginBehaviac.Nodes.SelectorLoop":
-                head = "";
+                onEnter = "";
                 tail = $"if({resultVarString} != {CSharpStrings.Invalid})\n" +
                        "{\n"
                        // + $"{parentVarString} = {resultVarString};\n"
@@ -215,47 +215,104 @@ public static class Tools
                        + $"goto {parentEndStringGoto}"
                        + "}\n";
                 break;
+            case "PluginBehaviac.Nodes.DecoratorLoop":
+                onEnter = "//循环节点下\n";
+                tail = $"{parentVarString} = {resultVarString};\n";
+                break;
+            case "PluginBehaviac.Nodes.DecoratorLoopUntil":
+                onEnter = "//循环直到之下\n";
+                tail = $"{parentVarString} = {resultVarString};\n";
+                break;
+            case "PluginBehaviac.Nodes.Parallel":
+                onEnter = "//并行节点之下\n";
+                localSwitch = true;
+                var childFinishPolicyCheck
+                    = parentParallelNodeConfig?.ChildFinishPolicy switch
+                    {
+                        "CHILDFINISH_LOOP" => $"//CHILDFINISH_LOOP循环则任何情况都会重新执行\n",
+                        "CHILDFINISH_ONCE" =>
+                            $"//CHILDFINISH_ONCE则看状态\nif({resultVarString} != {CSharpStrings.Running} && {resultVarString} " +
+                            $"!= {CSharpStrings.Invalid})\n{{\ngoto {outLabel}\n}}\n//CHILDFINISH_ONCE情况下，不是第一次执行或者running，则跳过执行\n",
+                        _ => throw new NullReferenceException()
+                    };
+                onEnter += childFinishPolicyCheck;
+                var successAll = parentParallelNodeConfig.SuccessPolicy switch
+                {
+                    "SUCCEED_ON_ALL" => true,
+                    "SUCCEED_ON_ONE" => false,
+                    _ => throw new NullReferenceException()
+                };
+                var failAll = parentParallelNodeConfig.FailPolicy switch
+                {
+                    "FAIL_ON_ALL" => true,
+                    "FAIL_ON_ONE" => false,
+                    _ => throw new NullReferenceException()
+                };
+                var onAllFail = (failAll ? $"{parentIdString}ParallelFail = false;\n" : "");
+                var successProcess = (successAll ? "" : $"{parentIdString}ParallelSuccess = true;\n") +
+                                     onAllFail;
+                var onAllSuccess = (successAll ? $"{parentIdString}ParallelSuccess = false;\n" : "");
+                var failProcess = (failAll ? "" : $"{parentIdString}ParallelFail = true;\n") +
+                                  onAllSuccess;
+                var runningProcess = onAllFail +
+                                     onAllSuccess;
+                tail = $"if({resultVarString} = {CSharpStrings.Success})\n{{\n{successProcess}\n}}\n";
+
+
+                break;
+            default:
+                throw new ArgumentException($"no fit parent {parentTypeString} id {parentId}");
         }
 
 // 解析节点
-        var enterString = idString + "Enter:\n";
-        var outString = idString + "Out:\n";
+
         var body = "";
         var acp2 = "";
         var outPutString = "";
-        var headResult = "";
+        var enterDo = "";
         var goNode = "Node" + runningGoNode;
         var runningNodeString =
             goNode + "RunningNode";
+        var runString = needResult ? resultVarString + $" = {CSharpStrings.Running};\n" : "";
+        var statusVar = needResult
+            ? $"private {CSharpStrings.BtStatusEnumName} {resultVarString} {{ get; set; }}\n"
+            : "";
+        var mustStatusVar = $"private {CSharpStrings.BtStatusEnumName} {resultVarString} {{ get; set; }}\n";
+
+        var successString = needResult ? resultVarString + $" = {CSharpStrings.Success};\n" : "";
+        var invalidString = needResult ? resultVarString + $" = {CSharpStrings.Invalid};\n" : "";
+        var failString = needResult ? resultVarString + $" = {CSharpStrings.Fail};\n" : "";
+        var continueRunningString = $"{runningNodeString} = {id};\n"
+                                    + $"{goNode}Result = {CSharpStrings.Running};\n"
+                                    + $"goto Node{runningGoNode}Out;\n";
+        var outRunningString = $"{runningNodeString} = -1;\n";
+        var countString = "";
+        var runningSwitch = $"case {id}:\n" + $"goto {idString}Run;\n";
+        ParallelNodeConfig? extraConfig = null;
         switch (nodeType)
         {
             case "PluginBehaviac.Nodes.DecoratorAlwaysSuccess":
-                acp2 = needResult
-                    ? $"private {CSharpStrings.BtStatusEnumName} {resultVarString} {{ get; set; }}\n"
-                    : "";
-                headResult = needResult ? resultVarString + $" = {CSharpStrings.Success};\n" : "";
-                outPutString = needResult ? resultVarString + $" = {CSharpStrings.Success};\n" : "";
+                acp2 = statusVar;
+
+                enterDo = successString;
+                outPutString = successString;
 
                 break;
-            case "PluginBehaviac.Nodes.Sequence":
-                acp2 = needResult
-                    ? $"private {CSharpStrings.BtStatusEnumName} {resultVarString} {{ get; set; }}\n"
-                    : "";
-                headResult = needResult ? resultVarString + $" = {CSharpStrings.Invalid};\n" : "\n";
-
+            case "PluginBehaviac.Nodes.Sequence" or "PluginBehaviac.Nodes.And":
+                acp2 = mustStatusVar;
+                enterDo = invalidString;
                 break;
             case "PluginBehaviac.Nodes.Selector":
-                acp2 = needResult
-                    ? $"private {CSharpStrings.BtStatusEnumName} {resultVarString} {{ get; set; }}\n"
-                    : "";
-                headResult = needResult ? resultVarString + $" = {CSharpStrings.Invalid};\n" : "\n";
+                acp2 = mustStatusVar;
+                enterDo = invalidString;
                 break;
-
+            case "PluginBehaviac.Nodes.False":
+                acp2 = statusVar;
+                body = failString;
+                break;
             case "PluginBehaviac.Nodes.IfElse":
-                acp2 = needResult
-                    ? $"private {CSharpStrings.BtStatusEnumName} {resultVarString} {{ get; set; }}\n"
-                    : "";
-                headResult = needResult ? resultVarString + $" = {CSharpStrings.Success};\n" : "\n";
+                acp2 = mustStatusVar;
+                enterDo = successString;
                 var orDefault =
                     xElements.FirstOrDefault(x =>
                         (x.Attribute("Identifier")?.Value ?? throw new NullReferenceException()) == "_else") ??
@@ -264,47 +321,18 @@ public static class Tools
                 extraId = int.Parse(value1);
                 break;
             case "PluginBehaviac.Nodes.Condition":
-                headResult = NodeCondition(node, needResult, resultVarString,
+                enterDo = ConditionConvert(node, needResult, resultVarString,
                     agentObjName, out body, out acp2);
                 break;
             case "PluginBehaviac.Nodes.Noop":
-                acp2 = needResult
-                    ? $"private {CSharpStrings.BtStatusEnumName} {resultVarString} {{ get; set; }}\n"
-                    : "";
-                headResult = needResult ? resultVarString + $" = {CSharpStrings.Success};\n" : "\n";
+                acp2 = statusVar;
+                enterDo = successString;
                 break;
-            case "PluginBehaviac.Nodes.DecoratorLoop":
-                acp2 = needResult
-                    ? $"private {CSharpStrings.BtStatusEnumName} {resultVarString} {{ get; set; }}\n"
-                    : "";
-                
-                var countString = node.Attribute("Count")?.Value;
-                headRunningSwitch += $"case {id}:\n" + $"goto {idString}Enter;\n";
-                //Node13Result= EBTStatus.BT_RUNNING;
-                // goto Node13Out;
-                var continueString = $"{runningNodeString} = {id};\n"
-                                     + $"goto Node{runningGoNode}Out;\n";
-                if (countString == "const int -1")
-                {
-                    outPutString = continueString;
-                    headResult = needResult ? resultVarString + $" = {CSharpStrings.Running};\n" : "\n";
-                }
-                else
-                {
-                    acp2 += idString + "nowRunTime { get; set; } = 0;\n";
-                    acp2 += idString + "maxRunTime { get; set; } = " + countString + ";\n";
-                    outPutString = "if(" + idString + "nowRunTime <" + idString + "maxRunTime)\n{" + continueString +
-                                   "}";
-                }
 
-                break;
             case "PluginBehaviac.Nodes.Action":
 
-                acp2 = needResult
-                    ? $"private {CSharpStrings.BtStatusEnumName} {resultVarString} {{ get; set; }}\n"
-                    : "";
+                acp2 = statusVar;
 
-                // headResult = needResult ? "" + resultVarString + $" = {CSharpStrings.Success};\n" : "\n";
                 var method = node.Attribute("Method")?.Value ??
                              throw new NullReferenceException($"no method in action node {id}");
 
@@ -316,15 +344,11 @@ public static class Tools
                     var varString = resultVarString + " = " + methodName + ";\n";
                     var runningNow =
                         " if (" + resultVarString + $" == {CSharpStrings.Running} )\n" +
-                        $"{{\n{runningNodeString} = " + id + ";\n" +
-                        // Node13Result= EBTStatus.BT_RUNNING;
-                        // goto Node13Out;
-                        $"{goNode}Result = {CSharpStrings.Running};\n"
-                        + $"goto {goNode}Out;\n"
+                        "{\n" + continueRunningString
                         + "}\n"
-                        + $"{runningNodeString} = -1;\n";
+                        + outRunningString;
 
-                    headRunningSwitch += $"case {id}:\n" + $"goto {idString}Enter;\n";
+                    headRunningSwitch += runningSwitch;
                     body = varString + runningNow;
                 }
                 else
@@ -369,19 +393,80 @@ public static class Tools
                 //     ? $"private {CSharpStrings.BtStatusEnumName} {resultVarString} {{ get; set; }}\n"
                 //     : "";
                 // private int Node11WhichBranchRunning { get; set; } = -1;
+                acp2 = mustStatusVar;
                 acp2 += $"private int {idString}WhichBranchRunning {{ get; set; }} = -1;\n";
-                headResult = "\n";
+                enterDo = "\n";
                 tail = "";
                 extraId = intId;
                 break;
+            case "PluginBehaviac.Nodes.DecoratorLoopUntil":
+                acp2 = mustStatusVar;
+                countString = node.Attribute("Count")?.Value ?? throw new NullReferenceException();
+                var untilString = node.Attribute("Until")?.Value ?? throw new NullReferenceException();
+                var boolGenStatus = CSharpStrings.BoolGenStatus(untilString);
+                headRunningSwitch += runningSwitch;
+                if (countString == "const int -1")
+                {
+                    // if (Node51Result != EBTStatus.BT_SUCCESS)
+                    // {
+                    //     Node51Result = EBTStatus.BT_RUNNING;
+                    //     Node0RunningNode = 51;
+                    //     Node0Result = EBTStatus.BT_RUNNING;
+                    //     goto Node0Out;
+                    // }
+
+                    body = $"if({resultVarString} != {boolGenStatus})\n{{\n" + runString + continueRunningString +
+                           "}\n" + outRunningString;
+                }
+                else
+                {
+                    acp2 += "private int " + idString + "NowRunTime { get; set; } = 0;\n";
+                    acp2 += "private int " + idString + "MaxRunTime { get; set; } = -1;\n";
+                    enterDo =
+                        $"{idString}NowRunTime = 0;\n{idString}MaxRunTime = {CSharpStrings.RemoveParameterAndActionHead(countString)};\n";
+                    body = "if(" + idString + "NowRunTime <" + idString +
+                           $"MaxRunTime && {resultVarString} != {boolGenStatus})\n{{\n"
+                           + $"{idString}NowRunTime++;\n"
+                           + $"{runString}"
+                           + continueRunningString
+                           + "}\n"
+                           + outRunningString;
+                }
+
+                break;
+            case "PluginBehaviac.Nodes.DecoratorLoop":
+                acp2 = statusVar;
+
+                countString = node.Attribute("Count")?.Value ?? throw new NullReferenceException();
+                headRunningSwitch += runningSwitch;
+                //Node13Result= EBTStatus.BT_RUNNING;
+                // goto Node13Out;
+
+                if (countString == "const int -1")
+                {
+                    body = runString + continueRunningString;
+                }
+                else
+                {
+                    acp2 += "private int " + idString + "NowRunTime { get; set; } = 0;\n";
+                    acp2 += "private int " + idString + "MaxRunTime { get; set; } = -1;\n";
+                    enterDo =
+                        $"{idString}NowRunTime = 0;\n{idString}MaxRunTime = {CSharpStrings.RemoveParameterAndActionHead(countString)};\n";
+                    body = "if(" + idString + "NowRunTime <" + idString + "MaxRunTime)\n{\n"
+                           + $"{idString}NowRunTime++;\n"
+                           + $"{runString}"
+                           + continueRunningString
+                           + "}\n"
+                           + outRunningString;
+                }
+
+                break;
             case "PluginBehaviac.Nodes.WithPrecondition":
-                acp2 = needResult
-                    ? $"private {CSharpStrings.BtStatusEnumName} {resultVarString} {{ get; set; }}\n"
-                    : "";
+                acp2 = statusVar;
                 //Node13BranchRunningNode
 
                 acp2 += $"private int {idString}RunningNode {{ get; set; }} = -1;\n";
-                headResult = resultVarString + $" = {CSharpStrings.Invalid};\n";
+                enterDo = resultVarString + $" = {CSharpStrings.Invalid};\n";
                 break;
             case "PluginBehaviac.Nodes.WaitFrames":
                 acp2 =
@@ -390,12 +475,12 @@ public static class Tools
                 acp2 += $"private int {idString}StartFrame {{ get; set; }} = -1;\n";
                 var waitTickString = node.Attribute("Frames")?.Value ?? throw new NullReferenceException();
                 var waitTick = CSharpStrings.RemoveParameterAndActionHead(waitTickString);
-                headResult = $"{idString}StartFrame = NowLocalTick;\n";
+                headRunningSwitch += runningSwitch;
+                enterDo = $"{idString}StartFrame = NowLocalTick;\n";
                 body = $"if (NowLocalTick - {idString}StartFrame + 1 >= {waitTick})\n"
-                       + $"{{\n{runningNodeString} = {intId};\n "
-                       + $"{goNode}Result = {CSharpStrings.Running};\n"
-                       + $"goto {goNode}Out;\n"
-                       + "}\n"+ $"{resultVarString} = {CSharpStrings.Success};\n";
+                       + "{\n" + continueRunningString + "}\n"
+                       + outRunningString
+                       + $"{resultVarString} = {CSharpStrings.Success};\n";
                 // if (NowLocalTick - Node49StartFrame + 1 >= 100)
                 // {
                 //     Node0RunningNode = 44;
@@ -405,7 +490,51 @@ public static class Tools
                 //
                 // Node49Result = EBTStatus.BT_SUCCESS;
                 break;
+            case "PluginBehaviac.Nodes.Parallel":
+                var childFinishPolicy =
+                    node.Attribute("ChildFinishPolicy")?.Value ?? throw new NullReferenceException();
+                var exitPolicy = node.Attribute("ExitPolicy")?.Value ?? throw new NullReferenceException();
+                var failurePolicy = node.Attribute("FailurePolicy")?.Value ?? throw new NullReferenceException();
+                var failurePolicyInit = failurePolicy switch
+                {
+                    "FAIL_ON_ALL" => "true",
+                    "FAIL_ON_ONE" => "false",
+                    _ => throw new ArgumentOutOfRangeException()
+                };
+                var successPolicy = node.Attribute("SuccessPolicy")?.Value ?? throw new NullReferenceException();
+                var successPolicyInit = successPolicy switch
+                {
+                    "SUCCEED_ON_ALL" => "true",
+                    "SUCCEED_ON_ONE" => "false",
+                    _ => throw new ArgumentOutOfRangeException()
+                };
+                var childFinishLoop = childFinishPolicy switch
+                {
+                    "CHILDFINISH_LOOP" => true,
+                    "CHILDFINISH_ONCE" => false,
+                    _ => throw new ArgumentOutOfRangeException()
+                };
+                acp2 = mustStatusVar;
+                acp2 += $"private bool {idString}ParallelSuccess {{ get; set; }} = {successPolicyInit};\n";
+                acp2 += $"private bool {idString}ParallelFail {{ get; set; }} = {failurePolicyInit};\n";
+                acp2 += $"private bool {idString}ParallelRunning {{ get; set; }} = false;\n";
+                var aggregate = childFinishLoop
+                    ? ""
+                    : GetAllChildId(node)
+                        .Aggregate("",
+                            (seed, x) =>
+                                seed +
+                                $"Node{x}Result = {CSharpStrings.Invalid};\n"); //如果CHILDFINISH_ONCE的话，需要先把所有子节点状态变为Invalid记录没跑过
+                enterDo =
+                    $"{idString}ParallelSuccess = {successPolicyInit};\n{idString}ParallelFail = {failurePolicyInit};\n{idString}ParallelRunning = false;\n" +
+                    aggregate;
+                extraConfig = new ParallelNodeConfig
+                {
+                    ChildFinishPolicy = childFinishPolicy, ExitPolicy = exitPolicy, FailPolicy = failurePolicy,
+                    SuccessPolicy = successPolicy
+                }; //子节点一些运行策略依赖父节点，需要传下去
 
+                break;
             default:
                 throw new ArgumentException($"Cant Read  {id} :Type {nodeType}");
         }
@@ -415,7 +544,7 @@ public static class Tools
         // 向子树递归收集
         foreach (var connector in xElements)
         {
-            var s1 = TransConnector(connector, intId, extraId, nodeType, agentObjName, runningGoNode,
+            var s1 = TransConnector(connector, intId, extraId, nodeType, agentObjName, runningGoNode, extraConfig,
                 out var acp,
                 out var aRunningSwitch,
                 out var irs);
@@ -425,19 +554,28 @@ public static class Tools
             nodeResultInitString += irs;
         }
 
-        s = s==""?"": "\n" + s +
-            "\n";
+        s = s == ""
+            ? ""
+            : "\n" + s +
+              "\n";
 
         var localS = "";
-        if (localswitch && headRunningSwitch != "")
+        if (localSwitch && headRunningSwitch != "")
         {
             localS = $"switch (Node{runningGoNode}RunningNode)\n{{\n" + headRunningSwitch + "\n}\n";
             headRunningSwitch = "";
         }
 
         treeStatusValues += acp2;
-        res += localS + head + headResult + enterString + body + s + outString + outPutString + tail;
+        res += localS + onEnter + enterDo + runLabel + s + body + outLabel + outPutString + tail;
         return res;
+    }
+
+    private static string[] GetAllChildId(XElement node)
+    {
+        return node.Element("Connector")?.Elements("Node")
+                   .Select(x => x.Attribute("Id")?.Value ?? throw new NullReferenceException()).ToArray() ??
+               throw new NullReferenceException();
     }
 
     private static string ConvertArmToFuncOrParam(string agentObjName, string r)
@@ -456,7 +594,7 @@ public static class Tools
         return rr;
     }
 
-    private static string NodeCondition(XElement node, bool needResult, string resultVarString,
+    private static string ConditionConvert(XElement node, bool needResult, string resultVarString,
         string agentObjName,
         out string body, out string acp2)
     {
@@ -471,7 +609,6 @@ public static class Tools
         var bb = ConvertArmToFuncOrParam(agentObjName, left) + link +
                  ConvertArmToFuncOrParam(agentObjName, right);
         bb = $"{bb} ? {CSharpStrings.Success} : {CSharpStrings.Fail};\n";
-
         body = needResult ? resultVarString + $" = {bb}\n" : "";
         return headResult;
     }
@@ -480,6 +617,7 @@ public static class Tools
     private static string TransConnector(XElement connector, int parentId, int extraId, string parentString,
         string agentObjName,
         int nowCheckRunningNode,
+        ParallelNodeConfig? parallelNodeConfig,
         out string acp,
         out string aRunningSwitch, out string irs)
     {
@@ -515,7 +653,7 @@ public static class Tools
         foreach (var xElement in xElements)
         {
             var transNode = TransNode(xElement, parentId, extraId, fixParentString, agentObjName,
-                                nowCheckRunningNode,
+                                nowCheckRunningNode, parallelNodeConfig,
                                 out var aStr, out var ars,
                                 out var airs) +
                             "\n";
@@ -577,9 +715,17 @@ public static class Tools
     }
 }
 
-enum PType
+internal enum PType
 {
     Enum,
     Struct,
     System
+}
+
+internal record ParallelNodeConfig
+{
+    public string ChildFinishPolicy { get; init; } = "";
+    public string ExitPolicy { get; init; } = "";
+    public string SuccessPolicy { get; init; } = "";
+    public string FailPolicy { get; init; } = "";
 }

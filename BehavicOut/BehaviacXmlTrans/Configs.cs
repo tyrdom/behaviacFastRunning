@@ -23,14 +23,15 @@ public static class Configs
     private static string Methods { get; } = Path.Combine(Dir, "SGame.meta.xml");
 
     public static string EditDir => "behaviors";
-    public static string TestName => $"WrapperAI{Path.DirectorySeparatorChar}NewTest{Path.DirectorySeparatorChar}TestNode2.xml";
+    // public static string TestName => $"WrapperAI{Path.DirectorySeparatorChar}Monster{Path.DirectorySeparatorChar}BTMonsterPassive.xml";
+    public static string TestName => $"WrapperAI{Path.DirectorySeparatorChar}NewTest{Path.DirectorySeparatorChar}TestNode3.xml";
     // public static string TestFile { get; } = Path.Combine(Dir, EditDir, TestName);
 
     public static XElement MetaXml { get; } =
         XElement.Load(GetMeta());
 
 
-    static string GetMeta()
+    private static string GetMeta()
     {
         var dir = Path.Combine(Dir, "behaviors", "behaviac_meta");
         

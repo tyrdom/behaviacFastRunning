@@ -9,6 +9,7 @@ public static class CSharpStrings
     public static string Invalid { get; } = $"{BtStatusEnumName}.BT_INVALID";
     public static string RunTimeInterface => ":IBTree";
     public static string RootRunningNodeString => "rootRunningNode";
+
     public static Dictionary<string, (string CsharpType, bool IsNewType)> TypeDic => new()
     {
         {"int", ("int", false)}
@@ -25,8 +26,8 @@ public static class CSharpStrings
         {
             return s;
         }
-        
-        
+
+
         if (CheckStructParamsAndFix(s, out var replace3)) return replace3;
 
         var lastIndexOf = s.LastIndexOf(":", StringComparison.Ordinal) + 1;
@@ -51,13 +52,12 @@ public static class CSharpStrings
         var indexOf = s.LastIndexOf('}') - 1;
         var values = s[(of + 1)..indexOf];
         var replace = values.Replace(';', ',');
-        var replace1 =of>1? s[..(of - 1)].Replace("const", "new") + "()":"";
+        var replace1 = of > 1 ? s[..(of - 1)].Replace("const", "new") + "()" : "";
         replace2 = replace1 + "{" + replace + "}";
         return true;
-
     }
 
-    public static string GenOperator(string? op)
+    public static string GenOperator(string op)
     {
         return op switch
         {
@@ -68,6 +68,16 @@ public static class CSharpStrings
             "Greater" => " > ",
             "Add" => " + ",
             _ => ""
+        };
+    }
+
+    public static string BoolGenStatus(string b)
+    {
+        return b switch
+        {
+            "true" => Success,
+            "false" => Fail,
+            _ => throw new ArgumentOutOfRangeException()
         };
     }
 
