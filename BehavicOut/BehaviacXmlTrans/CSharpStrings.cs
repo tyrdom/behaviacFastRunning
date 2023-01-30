@@ -27,7 +27,6 @@ public static class CSharpStrings
             return s;
         }
 
-
         if (CheckStructParamsAndFix(s, out var replace3)) return replace3;
 
         var lastIndexOf = s.LastIndexOf(":", StringComparison.Ordinal) + 1;
@@ -67,7 +66,8 @@ public static class CSharpStrings
             "Less" => " < ",
             "Greater" => " > ",
             "Add" => " + ",
-            _ => ""
+            "NotEqual" => " != ",
+            _ => throw new ArgumentOutOfRangeException()
         };
     }
 
@@ -94,10 +94,8 @@ public static class CSharpStrings
     public static string FindReturnTypeAndEtc(string name, string objName, out string methodName)
     {
         var findClass = FindClassAndEtc(name, out var mName, out var parameters);
-        var aggregate = parameters.Aggregate("",
-            (ss, x) => ss + RemoveParameterAndActionHead(x) + ',')[..^1];
-        methodName = objName + "." + mName + "(" + aggregate +
-                     ")";
+
+
         var xElements = Configs.MetaXml.Element("agents")
             ?.Elements().ToArray();
         var xElement = xElements
@@ -112,14 +110,46 @@ public static class CSharpStrings
                     var firstOrDefault = element.Elements("Method")
                         .FirstOrDefault(x => x.Attribute("Name")?.Value.ToString() == mName);
                     if (firstOrDefault == null) continue;
-                    var xAttribute = firstOrDefault.Attribute("ReturnType")?.Value ??
-                                     throw new NullReferenceException();
-                    return xAttribute;
+                    var returnTypeAndEtc = firstOrDefault.Attribute("ReturnType")?.Value ??
+                                           throw new NullReferenceException();
+                    var xAttributes = firstOrDefault.Elements("Param").Select(x =>
+                        x.Attribute("Type")?.Value ?? throw new NullReferenceException()).Zip(parameters);
+                    var s1 = xAttributes.Aggregate(" ", (s, x) => s + FuncParameterFix(x.First, x.Second) + ',')[..^1];
+
+                    methodName = objName + "." + mName + "(" + s1 +
+                                 ")";
+                    return returnTypeAndEtc;
                 }
             }
 
-            throw new NullReferenceException($"no method name {name} find method name {methodName}");
+            throw new NullReferenceException($"no method name {name}");
         }
+    }
+
+    private static string FuncParameterFix(string typeString, string argString)
+    {
+        if (!argString.StartsWith('"') && argString.Contains("::")) //非字符串并且带有::认为是变量，有问题后面再传入变量名
+        {
+            return RemoveParameterAndActionHead(argString);
+        }
+
+        //通过类型来给出正确的常量参数写法
+        //错误1 不给枚举写枚举类型 Self.SGame::InGame::GameLogic::ObjAgent::GetSkillAttackRange(SLOT_SKILL_2)
+        //错误2 浮点数没有f结尾 Self.SGame::InGame::GameLogic::ObjAgent::PlayAnimation(&quot;Idle&quot;,0.15,0,true)
+        var findParamType = Tools.FindParamType(typeString, true);
+        switch (findParamType)
+        {
+            case PType.Enum:
+                var lastIndexOf = typeString.LastIndexOf(':')+1;
+                return typeString[lastIndexOf..] + '.' + argString;
+        }
+
+        return typeString switch
+        {
+            "float" => argString + 'f',
+
+            _ => argString
+        };
     }
 
     private static string FindClassAndEtc(string name, out string methodName, out string[] parameters)
@@ -134,7 +164,7 @@ public static class CSharpStrings
         methodName = fullname[(lastIndexOf + 1)..];
         var enumerable = name[var..ls];
         var p = name[(var2 + 1)..v3];
-        var strings = p.Split(',');
+        var strings = p.Split(','); //先简单切分，认为字符串中没有,
         parameters = strings;
         return enumerable;
     }

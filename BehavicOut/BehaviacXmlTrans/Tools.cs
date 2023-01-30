@@ -18,7 +18,8 @@ public static class Tools
         var fileName1 = valueTuple.Item1;
         var lastIndexOf = fileName1[1..fileName1.LastIndexOf(".", StringComparison.Ordinal)];
         csName = lastIndexOf + ".cs";
-        var s = "using behaviac;\nusing SGame.InGame.GameLogic;\n\npublic class " + lastIndexOf +
+        var s = "using System;\nusing behaviac;\nusing SGame.InGame.GameLogic;\nusing PBConfig;\n\npublic class " +
+                lastIndexOf +
                 CSharpStrings.RunTimeInterface + "\n{\n";
 
         // foreach (var xAttribute in rootFirstAttribute)
@@ -611,7 +612,7 @@ public static class Tools
               "\n";
 
         var localS = "";
-        if (localSwitch && headRunningSwitch != "")
+        if (localSwitch)
         {
             acp2 += $"private int Node{runningGoNode}RunningNode {{ get; set; }} = -1;\n";
             localS = $"switch (Node{runningGoNode}RunningNode)\n{{\n" + headRunningSwitch + "\n}\n";
@@ -730,7 +731,7 @@ public static class Tools
             .Aggregate("\n", (current, pString) => current + pString);
     }
 
-    private static object FixParam(string type, string name, string value)
+    private static string FixParam(string type, string name, string value)
     {
         var t = type;
         var pt = PType.System;
@@ -752,11 +753,15 @@ public static class Tools
         };
     }
 
-    private static PType FindParamType(string replace)
+    public static PType FindParamType(string replace, bool maySys = false)
     {
-        XElement xElement = Configs.MetaXml.Element("types") ?? throw new NullReferenceException();
-        var firstOrDefault = xElement.Elements().FirstOrDefault(x => x.Attribute("Type")?.Value == replace) ??
-                             throw new NullReferenceException();
+        var xElement = Configs.MetaXml.Element("types") ?? throw new NullReferenceException();
+        var firstOrDefault = xElement.Elements().FirstOrDefault(x => x.Attribute("Type")?.Value == replace);
+        if (firstOrDefault == null)
+        {
+            return maySys ? PType.System : throw new NullReferenceException($"cant find type {replace}");
+        }
+
         var xName = firstOrDefault.Name.LocalName;
         return xName switch
         {
@@ -767,7 +772,7 @@ public static class Tools
     }
 }
 
-internal enum PType
+public enum PType
 {
     Enum,
     Struct,

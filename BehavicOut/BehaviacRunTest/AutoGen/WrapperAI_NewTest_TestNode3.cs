@@ -1,5 +1,7 @@
+using System;
 using behaviac;
 using SGame.InGame.GameLogic;
+using PBConfig;
 
 public class WrapperAI_NewTest_TestNode3:IBTree
 {
@@ -27,7 +29,8 @@ private EBTStatus Node8Result { get; set; }
 private EBTStatus Node7Result { get; set; }
 private EBTStatus Node4Result { get; set; }
 private EBTStatus Node46Result { get; set; }
-private int Node46RunningNode { get; set; } = -1;
+private EBTStatus Node3Result { get; set; }
+private int Node3RunningNode { get; set; } = -1;
 private EBTStatus Node38Result { get; set; }
 private EBTStatus Node2Result { get; set; }
 private EBTStatus Node10Result { get; set; }
@@ -95,9 +98,9 @@ Node47ParallelRunning = false;
 Node47Run:
 
 //
-//PluginBehaviac.Nodes.DecoratorLoop
-//Node46
-switch (Node46RunningNode)
+//PluginBehaviac.Nodes.Sequence
+//Node3
+switch (Node3RunningNode)
 {
 case 46:
 goto Node46Run;
@@ -105,6 +108,19 @@ goto Node46Run;
 }
 //并行节点之下
 //CHILDFINISH_LOOP循环则任何情况都会重新执行
+Node3Result = EBTStatus.BT_INVALID;
+Node3Run:
+
+//
+//PluginBehaviac.Nodes.Assignment
+//Node5
+Node5Run:
+testVar = new VInt3(){x=0,y=0,z=0};
+Node5Out:
+
+//
+//PluginBehaviac.Nodes.DecoratorLoop
+//Node46
 Node46Run:
 
 //
@@ -119,7 +135,7 @@ Node4Run:
 //Node8
 Node8Result = EBTStatus.BT_SUCCESS;
 Node8Run:
-Node8Result = ObjAgent.IsInValidVint3(testVar) == true ? EBTStatus.BT_SUCCESS : EBTStatus.BT_FAILURE;
+Node8Result = ObjAgent.IsInValidVint3( testVar) == true ? EBTStatus.BT_SUCCESS : EBTStatus.BT_FAILURE;
 
 Node8Out:
 if(Node8Result == EBTStatus.BT_SUCCESS)
@@ -131,7 +147,7 @@ goto Node4Out;
 //PluginBehaviac.Nodes.Action
 //Node7
 Node7Run:
-ObjAgent.LogMessage("Select：害是合法点");
+ObjAgent.LogMessage( "Select：害是合法点");
 Node7Result = EBTStatus.BT_FAILURE;
 Node7Out:
 if(Node7Result == EBTStatus.BT_SUCCESS)
@@ -152,11 +168,18 @@ Node46Result = Node4Result;
 
 
 Node46Result = EBTStatus.BT_RUNNING;
-Node46RunningNode = 46;
-Node46Result = EBTStatus.BT_RUNNING;
-goto Node46Out;
+Node3RunningNode = 46;
+Node3Result = EBTStatus.BT_RUNNING;
+goto Node3Out;
 Node46Out:
-switch(Node46Result)
+if(Node46Result == EBTStatus.BT_FAILURE)
+{
+Node3Result = EBTStatus.BT_FAILURE;
+goto Node3Out;
+}
+
+Node3Out:
+switch(Node3Result)
 {
 case EBTStatus.BT_SUCCESS:
 //需要successAll，初始值为true遇到失败情况置为false
@@ -209,7 +232,7 @@ Node16Run:
 //Node38
 Node38Result = EBTStatus.BT_SUCCESS;
 Node38Run:
-Node38Result = ObjAgent.IsInValidVint3(testVar) == false ? EBTStatus.BT_SUCCESS : EBTStatus.BT_FAILURE;
+Node38Result = ObjAgent.IsInValidVint3( testVar) == false ? EBTStatus.BT_SUCCESS : EBTStatus.BT_FAILURE;
 
 Node38Out:
 if(Node38Result == EBTStatus.BT_SUCCESS)
@@ -222,7 +245,7 @@ goto Node16Out;
 //Node2
 Node2Result = EBTStatus.BT_SUCCESS;
 Node2Run:
-Node2Result = ObjAgent.IsInValidVint3(testVar) == true ? EBTStatus.BT_SUCCESS : EBTStatus.BT_FAILURE;
+Node2Result = ObjAgent.IsInValidVint3( testVar) == true ? EBTStatus.BT_SUCCESS : EBTStatus.BT_FAILURE;
 
 Node2Out:
 if(Node2Result == EBTStatus.BT_SUCCESS)
@@ -271,7 +294,7 @@ goto Node17Run;
 }
 //选择监测动作之下
 Node17Run:
-Node17Result = ObjAgent.PlayAgeAction("balabala");
+Node17Result = ObjAgent.PlayAgeAction( "balabala");
  if (Node17Result == EBTStatus.BT_RUNNING )
 {
 Node13RunningNode = 17;
@@ -302,7 +325,7 @@ Node12Run:
 //选择监测条件之下
 Node14Result = EBTStatus.BT_SUCCESS;
 Node14Run:
-Node14Result = ObjAgent.IsInValidVint3(testVar) == true ? EBTStatus.BT_SUCCESS : EBTStatus.BT_FAILURE;
+Node14Result = ObjAgent.IsInValidVint3( testVar) == true ? EBTStatus.BT_SUCCESS : EBTStatus.BT_FAILURE;
 
 Node14Out:
 if(Node14Result == EBTStatus.BT_FAILURE)
@@ -357,7 +380,7 @@ Node22Out:
 //PluginBehaviac.Nodes.Action
 //Node41
 Node41Run:
-Node41Result = ObjAgent.PlayAgeAction("balabala");
+Node41Result = ObjAgent.PlayAgeAction( "balabala");
  if (Node41Result == EBTStatus.BT_RUNNING )
 {
 Node12RunningNode = 41;
@@ -376,7 +399,7 @@ goto Node19Out;
 //Node23
 Node23Result = EBTStatus.BT_SUCCESS;
 Node23Run:
-Node23Result = ObjAgent.IsInValidVint3(testVar) == false ? EBTStatus.BT_SUCCESS : EBTStatus.BT_FAILURE;
+Node23Result = ObjAgent.IsInValidVint3( testVar) == false ? EBTStatus.BT_SUCCESS : EBTStatus.BT_FAILURE;
 
 Node23Out:
 if(Node23Result == EBTStatus.BT_FAILURE)
@@ -388,7 +411,7 @@ goto Node19Out;
 //PluginBehaviac.Nodes.Action
 //Node24
 Node24Run:
-ObjAgent.LogMessage("Seq：合法点");
+ObjAgent.LogMessage( "Seq：合法点");
 Node24Result = EBTStatus.BT_SUCCESS;
 Node24Out:
 if(Node24Result == EBTStatus.BT_FAILURE)
@@ -407,7 +430,7 @@ Node25Run:
 //Node26
 Node26Result = EBTStatus.BT_SUCCESS;
 Node26Run:
-Node26Result = ObjAgent.IsInValidVint3(testVar) == true ? EBTStatus.BT_SUCCESS : EBTStatus.BT_FAILURE;
+Node26Result = ObjAgent.IsInValidVint3( testVar) == true ? EBTStatus.BT_SUCCESS : EBTStatus.BT_FAILURE;
 
 Node26Out:
 if(Node26Result == EBTStatus.BT_SUCCESS)
@@ -419,7 +442,7 @@ goto Node25Out;
 //PluginBehaviac.Nodes.Action
 //Node15
 Node15Run:
-Node15Result = ObjAgent.PlayAgeAction("balabala");
+Node15Result = ObjAgent.PlayAgeAction( "balabala");
  if (Node15Result == EBTStatus.BT_RUNNING )
 {
 Node12RunningNode = 15;
@@ -437,7 +460,7 @@ goto Node25Out;
 //PluginBehaviac.Nodes.Action
 //Node27
 Node27Run:
-ObjAgent.LogMessage("Select：害是合法点");
+ObjAgent.LogMessage( "Select：害是合法点");
 Node27Result = EBTStatus.BT_FAILURE;
 Node27Out:
 if(Node27Result == EBTStatus.BT_SUCCESS)
@@ -477,7 +500,7 @@ Node30Run:
 //选择监测条件之下
 Node31Result = EBTStatus.BT_SUCCESS;
 Node31Run:
-Node31Result = ObjAgent.IsInValidVint3(testVar) == true ? EBTStatus.BT_SUCCESS : EBTStatus.BT_FAILURE;
+Node31Result = ObjAgent.IsInValidVint3( testVar) == true ? EBTStatus.BT_SUCCESS : EBTStatus.BT_FAILURE;
 
 Node31Out:
 if(Node31Result == EBTStatus.BT_FAILURE)
@@ -507,7 +530,7 @@ Node18Run:
 //PluginBehaviac.Nodes.Action
 //Node40
 Node40Run:
-ObjAgent.LogMessage("分支1-1 ：准备润");
+ObjAgent.LogMessage( "分支1-1 ：准备润");
 Node40Result = EBTStatus.BT_FAILURE;
 Node40Out:
 if(Node40Result == EBTStatus.BT_FAILURE)
@@ -519,7 +542,7 @@ goto Node18Out;
 //PluginBehaviac.Nodes.Action
 //Node37
 Node37Run:
-Node37Result = ObjAgent.PlayAgeAction("balabala");
+Node37Result = ObjAgent.PlayAgeAction( "balabala");
  if (Node37Result == EBTStatus.BT_RUNNING )
 {
 Node30RunningNode = 37;
@@ -593,7 +616,7 @@ Node34Run:
 //Node35
 Node35Result = EBTStatus.BT_SUCCESS;
 Node35Run:
-Node35Result = ObjAgent.IsInValidVint3(testVar) == true ? EBTStatus.BT_SUCCESS : EBTStatus.BT_FAILURE;
+Node35Result = ObjAgent.IsInValidVint3( testVar) == true ? EBTStatus.BT_SUCCESS : EBTStatus.BT_FAILURE;
 
 Node35Out:
 if(Node35Result == EBTStatus.BT_SUCCESS)
@@ -605,7 +628,7 @@ goto Node34Out;
 //PluginBehaviac.Nodes.Action
 //Node36
 Node36Run:
-ObjAgent.LogMessage("分支1-2 ：准备润");
+ObjAgent.LogMessage( "分支1-2 ：准备润");
 Node36Result = EBTStatus.BT_FAILURE;
 Node36Out:
 if(Node36Result == EBTStatus.BT_SUCCESS)
@@ -617,7 +640,7 @@ goto Node34Out;
 //PluginBehaviac.Nodes.Action
 //Node39
 Node39Run:
-Node39Result = ObjAgent.PlayAgeAction("balabala");
+Node39Result = ObjAgent.PlayAgeAction( "balabala");
  if (Node39Result == EBTStatus.BT_RUNNING )
 {
 Node32RunningNode = 39;
@@ -691,8 +714,8 @@ Node47Result = Node47ParallelFail ? EBTStatus.BT_FAILURE : Node47ParallelSuccess
 //EXIT_ABORT_RUNNINGSIBLINGS 在成功或失败的时候要退出其他running状态的子节点
 if (Node47Result == EBTStatus.BT_FAILURE || Node47Result == EBTStatus.BT_SUCCESS)
 {
-Node46RunningNode = -1;
-Node46Result = EBTStatus.BT_INVALID;
+Node3RunningNode = -1;
+Node3Result = EBTStatus.BT_INVALID;
 Node11RunningNode = -1;
 Node11Result = EBTStatus.BT_INVALID;
 }
