@@ -191,10 +191,10 @@ public static class Tools
                 // }
                 break;
             case "PluginBehaviac.Nodes.WithPreconditionAction":
-                runningGoNode = parentId;
                 onEnter = "//选择监测动作之下\n";
-
+                runningGoNode = parentId;
                 localSwitch = true;
+
                 // {
                 //     case 17:
                 //         goto Node17Enter;
@@ -226,6 +226,7 @@ public static class Tools
             case "PluginBehaviac.Nodes.Parallel":
                 onEnter = "//并行节点之下\n";
                 localSwitch = true;
+                runningGoNode = intId;
                 var childFinishPolicyCheck
                     = parentParallelNodeConfig?.ChildFinishPolicy switch
                     {
@@ -248,16 +249,45 @@ public static class Tools
                     "FAIL_ON_ONE" => false,
                     _ => throw new NullReferenceException()
                 };
-                var onAllFail = (failAll ? $"{parentIdString}ParallelFail = false;\n" : "");
-                var successProcess = (successAll ? "" : $"{parentIdString}ParallelSuccess = true;\n") +
-                                     onAllFail;
-                var onAllSuccess = (successAll ? $"{parentIdString}ParallelSuccess = false;\n" : "");
-                var failProcess = (failAll ? "" : $"{parentIdString}ParallelFail = true;\n") +
-                                  onAllSuccess;
+                var onAllFail = (failAll
+                    ? $"{parentIdString}ParallelFail = false;//需要failAll，初始值为true遇到成功情况置为false\n"
+                    : "//需要failOne，初始为false遇到失败才会置为true\n");
+                var successProcess =
+                    (successAll
+                        ? "//需要successAll，初始值为true遇到失败情况置为false\n"
+                        : $"{parentIdString}ParallelSuccess = true;//需要successOne，初始为false遇到成功则置为true\n") +
+                    onAllFail;
+                var onAllSuccess = (successAll
+                    ? $"{parentIdString}ParallelSuccess = false;//需要successAll，初始值为true遇到失败情况置为false\n"
+                    : "//需要successOne，初始为false遇到成功则置为true\n");
+                var failProcess =
+                    (failAll
+                        ? "//需要failAll，初始值为true遇到成功情况置为false\n"
+                        : $"{parentIdString}ParallelFail = true;//需要failOne，初始为false遇到失败才会置为true\n") +
+                    onAllSuccess;
                 var runningProcess = onAllFail +
-                                     onAllSuccess;
-                tail = $"if({resultVarString} = {CSharpStrings.Success})\n{{\n{successProcess}\n}}\n";
-
+                                     onAllSuccess +
+                                     $"{parentIdString}ParallelRunning = true;//任何running都会使得并行节点running\n";
+                tail = $"switch({resultVarString})\n{{\n" +
+                       $"case {CSharpStrings.Success}:\n{successProcess}\nbreak;\n" +
+                       $"case {CSharpStrings.Fail}:\n{failProcess}\nbreak;\n" +
+                       $"case {CSharpStrings.Running}:\n{runningProcess}\nbreak;\n" +
+                       "default:\nthrow new ArgumentOutOfRangeException();" +
+                       "}\n";
+                // switch (Node46Result)
+                // {
+                //
+                //     case EBTStatus.BT_SUCCESS:
+                //         Node47ParallelSuccess = true;
+                //         Node47ParallelFail = false;
+                //         break;
+                //     case EBTStatus.BT_FAILURE:
+                //         break;
+                //     case EBTStatus.BT_RUNNING:
+                //         break;
+                //     default:
+                //         throw new ArgumentOutOfRangeException();
+                // }
 
                 break;
             default:
@@ -396,7 +426,7 @@ public static class Tools
                 acp2 = mustStatusVar;
                 acp2 += $"private int {idString}WhichBranchRunning {{ get; set; }} = -1;\n";
                 enterDo = "\n";
-                tail = "";
+                // tail = "";
                 extraId = intId;
                 break;
             case "PluginBehaviac.Nodes.DecoratorLoopUntil":
@@ -465,7 +495,7 @@ public static class Tools
                 acp2 = statusVar;
                 //Node13BranchRunningNode
 
-                acp2 += $"private int {idString}RunningNode {{ get; set; }} = -1;\n";
+
                 enterDo = resultVarString + $" = {CSharpStrings.Invalid};\n";
                 break;
             case "PluginBehaviac.Nodes.WaitFrames":
@@ -518,9 +548,10 @@ public static class Tools
                 acp2 += $"private bool {idString}ParallelSuccess {{ get; set; }} = {successPolicyInit};\n";
                 acp2 += $"private bool {idString}ParallelFail {{ get; set; }} = {failurePolicyInit};\n";
                 acp2 += $"private bool {idString}ParallelRunning {{ get; set; }} = false;\n";
+                var allChildId = GetAllChildId(node);
                 var aggregate = childFinishLoop
-                    ? ""
-                    : GetAllChildId(node)
+                    ? "//使用了childFinishLoop模式，所以不需要重置子节点状态到invalid\n"
+                    : allChildId
                         .Aggregate("",
                             (seed, x) =>
                                 seed +
@@ -532,8 +563,28 @@ public static class Tools
                 {
                     ChildFinishPolicy = childFinishPolicy, ExitPolicy = exitPolicy, FailPolicy = failurePolicy,
                     SuccessPolicy = successPolicy
-                }; //子节点一些运行策略依赖父节点，需要传下去
+                }; //子节点一些运行策略依赖父节点配置，需要把设置传下去
+                // Node47Result = Node47ParallelFail ? EBTStatus.BT_FAILURE :
+                // Node47ParallelSuccess ? EBTStatus.BT_SUCCESS :
+                //     Node47ParallelRunning ? EBTStatus.BT_RUNNING : EBTStatus.BT_FAILURE;
+                outPutString =
+                    $"{resultVarString} = {idString}ParallelFail ? {CSharpStrings.Fail} :" +
+                    $" {idString}ParallelSuccess ? {CSharpStrings.Success} : {idString}ParallelRunning ? {CSharpStrings.Running} : {CSharpStrings.Fail};\n";
 
+                var exitProcess = exitPolicy switch
+                {
+                    "EXIT_ABORT_RUNNINGSIBLINGS" => "//EXIT_ABORT_RUNNINGSIBLINGS 在成功或失败的时候要退出其他running状态的子节点\n" +
+                                                    $"if ({resultVarString} == {CSharpStrings.Fail} || {resultVarString} == {CSharpStrings.Success})\n{{\n" +
+                                                    //重置子节点的状态，running节点到-1，状态变为invalid
+                                                    allChildId.Aggregate("",
+                                                        (seed, x) =>
+                                                            seed +
+                                                            $"Node{x}RunningNode = -1;\nNode{x}Result = {CSharpStrings.Invalid};\n") +
+                                                    "}\n",
+                    "EXIT_NONE" => "//EXIT_NONE 退出不做任何操作，可保持原有节点的状态\n",
+                    _ => throw new ArgumentOutOfRangeException()
+                };
+                outPutString += exitProcess;
                 break;
             default:
                 throw new ArgumentException($"Cant Read  {id} :Type {nodeType}");
@@ -562,6 +613,7 @@ public static class Tools
         var localS = "";
         if (localSwitch && headRunningSwitch != "")
         {
+            acp2 += $"private int Node{runningGoNode}RunningNode {{ get; set; }} = -1;\n";
             localS = $"switch (Node{runningGoNode}RunningNode)\n{{\n" + headRunningSwitch + "\n}\n";
             headRunningSwitch = "";
         }

@@ -23,22 +23,18 @@ AISkillTypeTag EnumTest2 {get;set;} = AISkillTypeTag.None;
 private int NowLocalTick { get; set; } = -1;
 
 private int  Node0RunningNode{get;set;} = -1;
-private EBTStatus Node3Result { get; set; }
-private EBTStatus Node2Result { get; set; }
-private EBTStatus Node43Result { get; set; }
-private EBTStatus Node44Result { get; set; }
-private EBTStatus Node45Result { get; set; }
-private EBTStatus Node42Result { get; set; }
 private EBTStatus Node8Result { get; set; }
 private EBTStatus Node7Result { get; set; }
 private EBTStatus Node4Result { get; set; }
 private EBTStatus Node46Result { get; set; }
+private int Node46RunningNode { get; set; } = -1;
 private EBTStatus Node38Result { get; set; }
+private EBTStatus Node2Result { get; set; }
 private EBTStatus Node10Result { get; set; }
 private EBTStatus Node16Result { get; set; }
 private EBTStatus Node17Result { get; set; }
-private EBTStatus Node13Result { get; set; }
 private int Node13RunningNode { get; set; } = -1;
+private EBTStatus Node13Result { get; set; }
 private EBTStatus Node14Result { get; set; }
 private EBTStatus Node41Result { get; set; }
 private EBTStatus Node23Result { get; set; }
@@ -51,36 +47,31 @@ private EBTStatus Node31Result { get; set; }
 private EBTStatus Node40Result { get; set; }
 private EBTStatus Node37Result { get; set; }
 private EBTStatus Node18Result { get; set; }
-private EBTStatus Node30Result { get; set; }
 private int Node30RunningNode { get; set; } = -1;
+private EBTStatus Node30Result { get; set; }
 private EBTStatus Node33Result { get; set; }
 private EBTStatus Node35Result { get; set; }
 private EBTStatus Node36Result { get; set; }
 private EBTStatus Node39Result { get; set; }
 private EBTStatus Node34Result { get; set; }
-private EBTStatus Node32Result { get; set; }
 private int Node32RunningNode { get; set; } = -1;
+private EBTStatus Node32Result { get; set; }
 private EBTStatus Node29Result { get; set; }
 private int Node29WhichBranchRunning { get; set; } = -1;
 private EBTStatus Node19Result { get; set; }
-private EBTStatus Node12Result { get; set; }
 private int Node12RunningNode { get; set; } = -1;
+private EBTStatus Node12Result { get; set; }
 private EBTStatus Node11Result { get; set; }
 private int Node11WhichBranchRunning { get; set; } = -1;
+private int Node11RunningNode { get; set; } = -1;
 private EBTStatus Node47Result { get; set; }
-private bool Node47ParallelSuccess { get; set; } = false;
+private bool Node47ParallelSuccess { get; set; } = true;
 private bool Node47ParallelFail { get; set; } = true;
 private bool Node47ParallelRunning { get; set; } = false;
 private EBTStatus Node0Result { get; set; }
 public EBTStatus Tick()
 {
  NowLocalTick++;
-switch ( Node0RunningNode)
-{
-case 44:
-goto Node44Run;
-
-}
 //
 //PluginBehaviac.Nodes.Sequence
 //Node0
@@ -95,106 +86,18 @@ testVar = new VInt3(){x=0,y=0,z=0};
 Node1Out:
 
 //
-//PluginBehaviac.Nodes.Assignment
-//Node5
-Node5Run:
-testEnum = SkillSlotType.SLOT_SKILL_2;
-Node5Out:
-
-//
-//PluginBehaviac.Nodes.Assignment
-//Node9
-Node9Run:
-TestInt = 0;
-Node9Out:
-
-//
-//PluginBehaviac.Nodes.Condition
-//Node3
-Node3Result = EBTStatus.BT_SUCCESS;
-Node3Run:
-Node3Result = ObjAgent.IsInValidVint3(testVar) == false ? EBTStatus.BT_SUCCESS : EBTStatus.BT_FAILURE;
-
-Node3Out:
-if(Node3Result == EBTStatus.BT_FAILURE)
-{
-Node0Result = EBTStatus.BT_FAILURE;
-goto Node0Out;
-}
-//
-//PluginBehaviac.Nodes.Action
-//Node2
-Node2Run:
-ObjAgent.LogMessage("Seq：合法点");
-Node2Result = EBTStatus.BT_SUCCESS;
-Node2Out:
-if(Node2Result == EBTStatus.BT_FAILURE)
-{
-Node0Result = EBTStatus.BT_FAILURE;
-goto Node0Out;
-}
-//
-//PluginBehaviac.Nodes.IfElse
-//Node42
-Node42Result = EBTStatus.BT_SUCCESS;
-Node42Run:
-
-//
-//PluginBehaviac.Nodes.Condition
-//Node43
-Node43Result = EBTStatus.BT_SUCCESS;
-Node43Run:
-Node43Result = ObjAgent.IsInValidVint3(testVar) == false ? EBTStatus.BT_SUCCESS : EBTStatus.BT_FAILURE;
-
-Node43Out:
-if(Node43Result == EBTStatus.BT_FAILURE)
-{
-goto Node45Run;
-}
-//
-//PluginBehaviac.Nodes.Action
-//Node44
-Node44Run:
-Node44Result = ObjAgent.PlayAgeAction("balabala");
- if (Node44Result == EBTStatus.BT_RUNNING )
-{
-Node0RunningNode = 44;
-Node0Result = EBTStatus.BT_RUNNING;
-goto Node0Out;
-}
-Node0RunningNode = -1;
-Node44Out:
-Node42Result = Node44Result;
-goto Node42Out;
-
-//
-//PluginBehaviac.Nodes.Action
-//Node45
-Node45Run:
-ObjAgent.LogMessage("条件执行假：无效点");
-Node45Result = EBTStatus.BT_SUCCESS;
-Node45Out:
-Node42Result = Node45Result;
-
-
-Node42Out:
-if(Node42Result == EBTStatus.BT_FAILURE)
-{
-Node0Result = EBTStatus.BT_FAILURE;
-goto Node0Out;
-}
-//
 //PluginBehaviac.Nodes.Parallel
 //Node47
-Node47ParallelSuccess = false;
+Node47ParallelSuccess = true;
 Node47ParallelFail = true;
 Node47ParallelRunning = false;
+//使用了childFinishLoop模式，所以不需要重置子节点状态到invalid
 Node47Run:
 
 //
 //PluginBehaviac.Nodes.DecoratorLoop
 //Node46
-switch (Node0RunningNode)
+switch (Node46RunningNode)
 {
 case 46:
 goto Node46Run;
@@ -249,21 +152,35 @@ Node46Result = Node4Result;
 
 
 Node46Result = EBTStatus.BT_RUNNING;
-Node0RunningNode = 46;
-Node0Result = EBTStatus.BT_RUNNING;
-goto Node0Out;
+Node46RunningNode = 46;
+Node46Result = EBTStatus.BT_RUNNING;
+goto Node46Out;
 Node46Out:
-if(Node46Result == EBTStatus.BT_SUCCESS)
+switch(Node46Result)
 {
-Node47ParallelSuccess = true;
-Node47ParallelFail = false;
+case EBTStatus.BT_SUCCESS:
+//需要successAll，初始值为true遇到失败情况置为false
+Node47ParallelFail = false;//需要failAll，初始值为true遇到成功情况置为false
 
-}
+break;
+case EBTStatus.BT_FAILURE:
+//需要failAll，初始值为true遇到成功情况置为false
+Node47ParallelSuccess = false;//需要successAll，初始值为true遇到失败情况置为false
+
+break;
+case EBTStatus.BT_RUNNING:
+Node47ParallelFail = false;//需要failAll，初始值为true遇到成功情况置为false
+Node47ParallelSuccess = false;//需要successAll，初始值为true遇到失败情况置为false
+Node47ParallelRunning = true;//任何running都会使得并行节点running
+
+break;
+default:
+throw new ArgumentOutOfRangeException();}
 
 //
 //PluginBehaviac.Nodes.SelectorLoop
 //Node11
-switch (Node0RunningNode)
+switch (Node11RunningNode)
 {
 case 10:
 goto Node10Run;
@@ -301,17 +218,30 @@ Node16Result = EBTStatus.BT_SUCCESS;
 goto Node16Out;
 }
 //
+//PluginBehaviac.Nodes.Condition
+//Node2
+Node2Result = EBTStatus.BT_SUCCESS;
+Node2Run:
+Node2Result = ObjAgent.IsInValidVint3(testVar) == true ? EBTStatus.BT_SUCCESS : EBTStatus.BT_FAILURE;
+
+Node2Out:
+if(Node2Result == EBTStatus.BT_SUCCESS)
+{
+Node16Result = EBTStatus.BT_SUCCESS;
+goto Node16Out;
+}
+//
 //PluginBehaviac.Nodes.Action
 //Node10
 Node10Run:
 Node10Result = ObjAgent.IsOffline();
  if (Node10Result == EBTStatus.BT_RUNNING )
 {
-Node0RunningNode = 10;
-Node0Result = EBTStatus.BT_RUNNING;
-goto Node0Out;
+Node11RunningNode = 10;
+Node11Result = EBTStatus.BT_RUNNING;
+goto Node11Out;
 }
-Node0RunningNode = -1;
+Node11RunningNode = -1;
 Node10Out:
 if(Node10Result == EBTStatus.BT_SUCCESS)
 {
@@ -715,7 +645,11 @@ goto Node29Out;
 
 
 Node29Out:
-
+if(Node29Result == EBTStatus.BT_FAILURE)
+{
+Node19Result = EBTStatus.BT_FAILURE;
+goto Node19Out;
+}
 
 Node19Out:
 Node12Result = Node19Result;
@@ -730,9 +664,38 @@ goto Node11Out;
 
 
 Node11Out:
+switch(Node11Result)
+{
+case EBTStatus.BT_SUCCESS:
+//需要successAll，初始值为true遇到失败情况置为false
+Node47ParallelFail = false;//需要failAll，初始值为true遇到成功情况置为false
+
+break;
+case EBTStatus.BT_FAILURE:
+//需要failAll，初始值为true遇到成功情况置为false
+Node47ParallelSuccess = false;//需要successAll，初始值为true遇到失败情况置为false
+
+break;
+case EBTStatus.BT_RUNNING:
+Node47ParallelFail = false;//需要failAll，初始值为true遇到成功情况置为false
+Node47ParallelSuccess = false;//需要successAll，初始值为true遇到失败情况置为false
+Node47ParallelRunning = true;//任何running都会使得并行节点running
+
+break;
+default:
+throw new ArgumentOutOfRangeException();}
 
 
 Node47Out:
+Node47Result = Node47ParallelFail ? EBTStatus.BT_FAILURE : Node47ParallelSuccess ? EBTStatus.BT_SUCCESS : Node47ParallelRunning ? EBTStatus.BT_RUNNING : EBTStatus.BT_FAILURE;
+//EXIT_ABORT_RUNNINGSIBLINGS 在成功或失败的时候要退出其他running状态的子节点
+if (Node47Result == EBTStatus.BT_FAILURE || Node47Result == EBTStatus.BT_SUCCESS)
+{
+Node46RunningNode = -1;
+Node46Result = EBTStatus.BT_INVALID;
+Node11RunningNode = -1;
+Node11Result = EBTStatus.BT_INVALID;
+}
 if(Node47Result == EBTStatus.BT_FAILURE)
 {
 Node0Result = EBTStatus.BT_FAILURE;
