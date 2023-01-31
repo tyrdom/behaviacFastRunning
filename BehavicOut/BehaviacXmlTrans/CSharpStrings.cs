@@ -67,7 +67,8 @@ public static class CSharpStrings
             "Greater" => " > ",
             "Add" => " + ",
             "NotEqual" => " != ",
-            _ => throw new ArgumentOutOfRangeException()
+            "Mul" => " * ",
+            _ => throw new ArgumentOutOfRangeException($"cant match op : {op}")
         };
     }
 

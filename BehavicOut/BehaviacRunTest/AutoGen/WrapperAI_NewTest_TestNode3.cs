@@ -6,10 +6,6 @@ using PBConfig;
 public class WrapperAI_NewTest_TestNode3:IBTree
 {
 private ObjAgent ObjAgent  {get;}
-public WrapperAI_NewTest_TestNode3(ObjAgent a)
-{
-ObjAgent = a; 
-}
 // Local Parameter
 //testVar
 VInt3 testVar {get;set;} = new(){x=0,y=0,z=0};
@@ -25,6 +21,7 @@ AISkillTypeTag EnumTest2 {get;set;} = AISkillTypeTag.None;
 private int NowLocalTick { get; set; } = -1;
 
 private int  Node0RunningNode{get;set;} = -1;
+private EBTStatus Node43Result { get; set; }
 private EBTStatus Node8Result { get; set; }
 private EBTStatus Node7Result { get; set; }
 private EBTStatus Node4Result { get; set; }
@@ -67,6 +64,9 @@ private EBTStatus Node12Result { get; set; }
 private EBTStatus Node11Result { get; set; }
 private int Node11WhichBranchRunning { get; set; } = -1;
 private int Node11RunningNode { get; set; } = -1;
+private EBTStatus Node9Result { get; set; }
+private WrapperAI_NewTest_TestNode Node9SubTree { get; }
+private int Node9RunningNode { get; set; } = -1;
 private EBTStatus Node47Result { get; set; }
 private bool Node47ParallelSuccess { get; set; } = true;
 private bool Node47ParallelFail { get; set; } = true;
@@ -88,6 +88,24 @@ Node1Run:
 testVar = new VInt3(){x=0,y=0,z=0};
 Node1Out:
 
+//
+//PluginBehaviac.Nodes.Compute
+//Node42
+Node42Run:
+TestInt = ObjAgent.GetIntVariable( "") + TestInt;
+Node42Out:
+
+//
+//PluginBehaviac.Nodes.True
+//Node43
+Node43Run:
+Node43Result = EBTStatus.BT_SUCCESS;
+Node43Out:
+if(Node43Result == EBTStatus.BT_FAILURE)
+{
+Node0Result = EBTStatus.BT_FAILURE;
+goto Node0Out;
+}
 //
 //PluginBehaviac.Nodes.Parallel
 //Node47
@@ -708,6 +726,39 @@ break;
 default:
 throw new ArgumentOutOfRangeException();}
 
+//
+//Behaviac.Design.Nodes.ReferencedBehavior
+//Node9
+switch (Node9RunningNode)
+{
+
+}
+//并行节点之下
+//CHILDFINISH_LOOP循环则任何情况都会重新执行
+Node9Run:
+Node9SubTree.Tick();
+Node9Out:
+switch(Node9Result)
+{
+case EBTStatus.BT_SUCCESS:
+//需要successAll，初始值为true遇到失败情况置为false
+Node47ParallelFail = false;//需要failAll，初始值为true遇到成功情况置为false
+
+break;
+case EBTStatus.BT_FAILURE:
+//需要failAll，初始值为true遇到成功情况置为false
+Node47ParallelSuccess = false;//需要successAll，初始值为true遇到失败情况置为false
+
+break;
+case EBTStatus.BT_RUNNING:
+Node47ParallelFail = false;//需要failAll，初始值为true遇到成功情况置为false
+Node47ParallelSuccess = false;//需要successAll，初始值为true遇到失败情况置为false
+Node47ParallelRunning = true;//任何running都会使得并行节点running
+
+break;
+default:
+throw new ArgumentOutOfRangeException();}
+
 
 Node47Out:
 Node47Result = Node47ParallelFail ? EBTStatus.BT_FAILURE : Node47ParallelSuccess ? EBTStatus.BT_SUCCESS : Node47ParallelRunning ? EBTStatus.BT_RUNNING : EBTStatus.BT_FAILURE;
@@ -718,6 +769,8 @@ Node3RunningNode = -1;
 Node3Result = EBTStatus.BT_INVALID;
 Node11RunningNode = -1;
 Node11Result = EBTStatus.BT_INVALID;
+Node9RunningNode = -1;
+Node9Result = EBTStatus.BT_INVALID;
 }
 if(Node47Result == EBTStatus.BT_FAILURE)
 {
@@ -728,5 +781,10 @@ goto Node0Out;
 Node0Out:
 return Node0Result;
 
+}public WrapperAI_NewTest_TestNode3(ObjAgent a)
+{
+ObjAgent = a;
+Node9SubTree = new WrapperAI_NewTest_TestNode(a);
 }
+
 }

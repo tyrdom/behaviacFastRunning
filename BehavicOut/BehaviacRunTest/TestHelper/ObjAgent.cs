@@ -21,4 +21,9 @@ public class ObjAgent
     {
         return EBTStatus.BT_RUNNING;
     }
+
+    public int GetIntVariable(string empty)
+    {
+        return 1;
+    }
 }
