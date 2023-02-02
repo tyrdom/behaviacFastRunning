@@ -276,7 +276,7 @@ goto Node16Out;
 //Node10
 Node10Run:
 Node10Result = ObjAgent.IsOffline();
- if (Node10Result == EBTStatus.BT_RUNNING )
+ if (Node10Result == EBTStatus.BT_RUNNING)
 {
 Node11RunningNode = 10;
 Node11Result = EBTStatus.BT_RUNNING;
@@ -313,7 +313,7 @@ goto Node17Run;
 //选择监测动作之下
 Node17Run:
 Node17Result = ObjAgent.PlayAgeAction( "balabala");
- if (Node17Result == EBTStatus.BT_RUNNING )
+ if (Node17Result == EBTStatus.BT_RUNNING)
 {
 Node13RunningNode = 17;
 Node13Result = EBTStatus.BT_RUNNING;
@@ -399,7 +399,7 @@ Node22Out:
 //Node41
 Node41Run:
 Node41Result = ObjAgent.PlayAgeAction( "balabala");
- if (Node41Result == EBTStatus.BT_RUNNING )
+ if (Node41Result == EBTStatus.BT_RUNNING)
 {
 Node12RunningNode = 41;
 Node12Result = EBTStatus.BT_RUNNING;
@@ -461,7 +461,7 @@ goto Node25Out;
 //Node15
 Node15Run:
 Node15Result = ObjAgent.PlayAgeAction( "balabala");
- if (Node15Result == EBTStatus.BT_RUNNING )
+ if (Node15Result == EBTStatus.BT_RUNNING)
 {
 Node12RunningNode = 15;
 Node12Result = EBTStatus.BT_RUNNING;
@@ -561,7 +561,7 @@ goto Node18Out;
 //Node37
 Node37Run:
 Node37Result = ObjAgent.PlayAgeAction( "balabala");
- if (Node37Result == EBTStatus.BT_RUNNING )
+ if (Node37Result == EBTStatus.BT_RUNNING)
 {
 Node30RunningNode = 37;
 Node30Result = EBTStatus.BT_RUNNING;
@@ -598,7 +598,7 @@ Node32Run:
 //选择监测条件之下
 Node33Run:
 Node33Result = ObjAgent.IsOffline();
- if (Node33Result == EBTStatus.BT_RUNNING )
+ if (Node33Result == EBTStatus.BT_RUNNING)
 {
 Node12RunningNode = 33;
 Node12Result = EBTStatus.BT_RUNNING;
@@ -659,7 +659,7 @@ goto Node34Out;
 //Node39
 Node39Run:
 Node39Result = ObjAgent.PlayAgeAction( "balabala");
- if (Node39Result == EBTStatus.BT_RUNNING )
+ if (Node39Result == EBTStatus.BT_RUNNING)
 {
 Node32RunningNode = 39;
 Node32Result = EBTStatus.BT_RUNNING;
@@ -731,12 +731,21 @@ throw new ArgumentOutOfRangeException();}
 //Node9
 switch (Node9RunningNode)
 {
+case 9:
+goto Node9Run;
 
 }
 //并行节点之下
 //CHILDFINISH_LOOP循环则任何情况都会重新执行
 Node9Run:
-Node9SubTree.Tick();
+Node9Result = Node9SubTree.Tick();
+ if (Node9Result == EBTStatus.BT_RUNNING)
+{
+Node9RunningNode = 9;
+Node9Result = EBTStatus.BT_RUNNING;
+goto Node9Out;
+}
+Node9RunningNode = -1;
 Node9Out:
 switch(Node9Result)
 {

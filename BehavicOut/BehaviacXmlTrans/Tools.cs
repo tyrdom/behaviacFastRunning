@@ -161,7 +161,7 @@ public static class Tools
                        + $"goto {parentEndStringGoto}"
                        + "}";
                 break;
-            case "PluginBehaviac.Nodes.Selector":
+            case "PluginBehaviac.Nodes.Selector" or "PluginBehaviac.Nodes.Or":
 
                 tail = $"if({resultVarString} == {CSharpStrings.Success})\n"
                        + "{\n"
@@ -336,7 +336,7 @@ public static class Tools
                 acp2 = mustStatusVar;
                 enterDo = invalidString;
                 break;
-            case "PluginBehaviac.Nodes.Selector":
+            case "PluginBehaviac.Nodes.Selector" or "PluginBehaviac.Nodes.Or":
                 acp2 = mustStatusVar;
                 enterDo = invalidString;
                 break;
@@ -381,7 +381,7 @@ public static class Tools
                 {
                     var varString = resultVarString + " = " + methodName + ";\n";
                     var runningNow =
-                        " if (" + resultVarString + $" == {CSharpStrings.Running} )\n" +
+                        " if (" + resultVarString + $" == {CSharpStrings.Running})\n" +
                         "{\n" + continueRunningString
                         + "}\n"
                         + outRunningString;
@@ -422,9 +422,9 @@ public static class Tools
                          throw new NullReferenceException($"not Res @ {id}");
                 body = CSharpStrings.RemoveParameterAndActionHead(o)
                        + " = "
-                       + ConvertArmToFuncOrParam(agentObjName,p1)
+                       + ConvertArmToFuncOrParam(agentObjName, p1)
                        + CSharpStrings.GenOperator(op)
-                       + ConvertArmToFuncOrParam(agentObjName,p2) + ";\n";
+                       + ConvertArmToFuncOrParam(agentObjName, p2) + ";\n";
                 break;
             case "PluginBehaviac.Nodes.SelectorLoop":
                 // acp2 = needResult
@@ -461,7 +461,7 @@ public static class Tools
                     acp2 += "private int " + idString + "NowRunTime { get; set; } = 0;\n";
                     acp2 += "private int " + idString + "MaxRunTime { get; set; } = -1;\n";
                     enterDo =
-                        $"{idString}NowRunTime = 0;\n{idString}MaxRunTime = {ConvertArmToFuncOrParam(agentObjName,countString)};\n";
+                        $"{idString}NowRunTime = 0;\n{idString}MaxRunTime = {ConvertArmToFuncOrParam(agentObjName, countString)};\n";
                     body = "if(" + idString + "NowRunTime <" + idString +
                            $"MaxRunTime && {resultVarString} != {boolGenStatus})\n{{\n"
                            + $"{idString}NowRunTime++;\n"
@@ -488,7 +488,7 @@ public static class Tools
                     acp2 += "private int " + idString + "NowRunTime { get; set; } = 0;\n";
                     acp2 += "private int " + idString + "MaxRunTime { get; set; } = -1;\n";
                     enterDo =
-                        $"{idString}NowRunTime = 0;\n{idString}MaxRunTime = {ConvertArmToFuncOrParam(agentObjName,countString)};\n";
+                        $"{idString}NowRunTime = 0;\n{idString}MaxRunTime = {ConvertArmToFuncOrParam(agentObjName, countString)};\n";
                     body = "if(" + idString + "NowRunTime <" + idString + "MaxRunTime)\n{\n"
                            + $"{idString}NowRunTime++;\n"
                            + $"{runString}"
@@ -511,7 +511,7 @@ public static class Tools
 
                 acp2 += $"private int {idString}StartFrame {{ get; set; }} = -1;\n";
                 var waitTickString = node.Attribute("Frames")?.Value ?? throw new NullReferenceException();
-                var waitTick = ConvertArmToFuncOrParam(agentObjName,waitTickString);
+                var waitTick = ConvertArmToFuncOrParam(agentObjName, waitTickString);
                 headRunningSwitch += runningSwitch;
                 enterDo = $"{idString}StartFrame = NowLocalTick;\n";
                 body = $"if (NowLocalTick - {idString}StartFrame + 1 >= {waitTick})\n"
@@ -599,9 +599,21 @@ public static class Tools
                 var subTreeType = subTreeName[1..^1].Replace('/', '_');
                 // private IBTree Node9SubTree { get; }
                 acp2 += $"private {subTreeType} {idString}SubTree {{ get; }}\n";
-                body = $"{idString}SubTree.Tick();\n";
+                body = (needResult ? $"{resultVarString} = " : "") + $"{idString}SubTree.Tick();\n";
                 // Node9SubTree = new WrapperAI_NewTest_TestNode(a);
                 subTreeConstruct += $"{idString}SubTree = new {subTreeType}(a);\n";
+                if (needResult)
+                {
+                    var runningNow =
+                        " if (" + resultVarString + $" == {CSharpStrings.Running})\n" +
+                        "{\n" + continueRunningString
+                        + "}\n"
+                        + outRunningString;
+
+                    headRunningSwitch += runningSwitch;
+                    body += runningNow;
+                }
+
                 break;
             default:
                 throw new ArgumentException($"Cant Read  {id} :Type {nodeType}");

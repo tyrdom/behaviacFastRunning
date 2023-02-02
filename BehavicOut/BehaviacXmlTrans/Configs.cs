@@ -23,7 +23,8 @@ public static class Configs
     private static string Methods { get; } = Path.Combine(Dir, "SGame.meta.xml");
 
     public static string EditDir => "behaviors";
-    // public static string TestName => $"WrapperAI{Path.DirectorySeparatorChar}Hero{Path.DirectorySeparatorChar}HeroCommonAI.xml";
+    // public static string TestName => $"WrapperAI{Path.DirectorySeparatorChar}Hero{Path.DirectorySeparatorChar}AI{Path.DirectorySeparatorChar}AI_Personal_Decisions.xml";
+    // public static string TestName => $"WrapperAI{Path.DirectorySeparatorChar}Monster{Path.DirectorySeparatorChar}BTMonsterPassive2.xml";
     public static string TestName => $"WrapperAI{Path.DirectorySeparatorChar}NewTest{Path.DirectorySeparatorChar}TestNode3.xml";
     
 
