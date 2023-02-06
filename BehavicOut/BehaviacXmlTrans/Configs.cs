@@ -24,14 +24,14 @@ public static class Configs
 
     public static string EditDir => "behaviors";
     // public static string TestName => $"WrapperAI{Path.DirectorySeparatorChar}Hero{Path.DirectorySeparatorChar}AI{Path.DirectorySeparatorChar}AI_Personal_Decisions.xml";
-    // public static string TestName => $"WrapperAI{Path.DirectorySeparatorChar}Monster{Path.DirectorySeparatorChar}BTMonsterPassive2.xml";
-    public static string TestName => $"WrapperAI{Path.DirectorySeparatorChar}NewTest{Path.DirectorySeparatorChar}TestNode3.xml";
-    
+    public static string TestName => $"WrapperAI{Path.DirectorySeparatorChar}Monster{Path.DirectorySeparatorChar}BTMonsterPassive2.xml";
+    // public static string TestName => $"WrapperAI{Path.DirectorySeparatorChar}NewTest{Path.DirectorySeparatorChar}TestNode3.xml";
 
+    public static string TestDir => $"WrapperAI{Path.DirectorySeparatorChar}Hero";
     public static XElement MetaXml { get; } =
         XElement.Load(GetMeta());
 
-
+    
     private static string GetMeta()
     {
         var dir = Path.Combine(Dir, "behaviors", "behaviac_meta");
@@ -40,5 +40,16 @@ public static class Configs
         var firstOrDefault = directoryInfo.GetFiles("*.meta.xml").FirstOrDefault() ??
                              throw new Exception($"no file match in {dir}");
         return firstOrDefault.FullName;
+    }
+    
+    public static IEnumerable<string> Director(DirectoryInfo d)
+    {
+       
+        var files = d.GetFiles();//文件
+        var directs = d.GetDirectories();//文件夹
+        var collection = files.Select(f => f.FullName);
+        var selectMany = directs.SelectMany(Director);
+        var enumerable = collection.Union(selectMany);
+        return enumerable;
     }
 }

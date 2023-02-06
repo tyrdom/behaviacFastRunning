@@ -327,18 +327,16 @@ public static class Tools
         {
             case "PluginBehaviac.Nodes.DecoratorAlwaysSuccess":
                 acp2 = statusVar;
-
                 enterDo = successString;
                 outPutString = successString;
-
                 break;
             case "PluginBehaviac.Nodes.Sequence" or "PluginBehaviac.Nodes.And":
                 acp2 = mustStatusVar;
-                enterDo = invalidString;
+                enterDo = successString;
                 break;
             case "PluginBehaviac.Nodes.Selector" or "PluginBehaviac.Nodes.Or":
                 acp2 = mustStatusVar;
-                enterDo = invalidString;
+                enterDo = failString;
                 break;
             case "PluginBehaviac.Nodes.False":
                 acp2 = statusVar;
