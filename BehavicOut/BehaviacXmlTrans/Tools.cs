@@ -97,7 +97,7 @@ public static class Tools
 
     private static string TransNode(XElement node, int parentId, int extraId, string parentTypeString,
         string agentObjName, int runningGoNode,
-        ParallelNodeConfig? parentParallelNodeConfig,
+        INodeConfig? nodeConfig,
         out string treeStatusValues,
         out string headRunningSwitch, out string nodeResultInitString, out string subTreeConstruct)
     {
@@ -149,6 +149,24 @@ public static class Tools
             case "Root":
 
                 tail = $"return {resultVarString};";
+                break;
+            case "PluginBehaviac.Nodes.DecoratorNot":
+                // Node44Result = Node43Result switch
+                // {
+                //     EBTStatus.BT_RUNNING => EBTStatus.BT_RUNNING,
+                //     EBTStatus.BT_SUCCESS => EBTStatus.BT_FAILURE,
+                //     EBTStatus.BT_FAILURE => EBTStatus.BT_SUCCESS,
+                //     EBTStatus.BT_INVALID => throw new ArgumentOutOfRangeException(),
+                //     _ => throw new ArgumentOutOfRangeException()
+                // };
+                tail =
+                    $"{parentVarString} ={resultVarString} switch\n{{\n" +
+                    $"{CSharpStrings.Running} => {CSharpStrings.Running},\n" +
+                    $"{CSharpStrings.Success} => {CSharpStrings.Fail},\n" +
+                    $"{CSharpStrings.Fail} => {CSharpStrings.Success},\n" +
+                    $"{CSharpStrings.Invalid} => throw new ArgumentOutOfRangeException(),\n" +
+                    $"_ => throw new ArgumentOutOfRangeException()," +
+                    "\n};\n";
                 break;
             case "PluginBehaviac.Nodes.DecoratorAlwaysSuccess":
                 needResult = false;
@@ -219,6 +237,26 @@ public static class Tools
                        + $"goto {parentEndStringGoto}"
                        + "}\n";
                 break;
+            case "PluginBehaviac.Nodes.SelectorProbability":
+                onEnter = "//概率选择之下，应该是权重节点\n";
+                var selectorProbabilityConfig = (SelectorProbabilityConfig) nodeConfig!;
+                var aExp = selectorProbabilityConfig.IdToExpression.TryGetValue(intId, out var exp)
+                    ? exp
+                    : throw new KeyNotFoundException();
+                // if (Node45RandomNowNum >=3)
+                // {
+                //     Node48RunningNode = -1;
+                //     goto Node48Out;
+                // }
+                onEnter +=
+                    $"if(Node{parentId}RandomNowNum >= {aExp})\n{{\nNode{intId}RunningNode = -1;\ngoto Node{intId}Out;\n\n}}\n";
+                localSwitch = true;
+                runningGoNode = intId;
+                break;
+            case "PluginBehaviac.Nodes.DecoratorWeight":
+                onEnter = "//概率权重节点之下\n";
+                tail = $"Node{extraId}Result = {resultVarString};\n";
+                break;
             case "PluginBehaviac.Nodes.DecoratorLoop":
                 onEnter = "//循环节点下\n";
                 tail = $"{parentVarString} = {resultVarString};\n";
@@ -231,39 +269,40 @@ public static class Tools
                 onEnter = "//并行节点之下\n";
                 localSwitch = true;
                 runningGoNode = intId;
+                var parentParallelNodeConfigs = (ParallelNodeConfig) nodeConfig!;
                 var childFinishPolicyCheck
-                    = parentParallelNodeConfig?.ChildFinishPolicy switch
+                    = parentParallelNodeConfigs?.ChildFinishPolicy switch
                     {
                         "CHILDFINISH_LOOP" => $"//CHILDFINISH_LOOP循环则任何情况都会重新执行\n",
                         "CHILDFINISH_ONCE" =>
                             $"//CHILDFINISH_ONCE则看状态\nif({resultVarString} != {CSharpStrings.Running} && {resultVarString} " +
-                            $"!= {CSharpStrings.Invalid})\n{{\ngoto {outLabel}\n}}\n//CHILDFINISH_ONCE情况下，不是第一次执行或者running，则跳过执行\n",
+                            $"!= {CSharpStrings.Invalid})\n{{\ngoto {idString}Out;\n}}\n//CHILDFINISH_ONCE情况下，不是第一次执行或者running，则跳过执行\n",
                         _ => throw new NullReferenceException()
                     };
                 onEnter += childFinishPolicyCheck;
-                var successAll = parentParallelNodeConfig.SuccessPolicy switch
+                var successAll = parentParallelNodeConfigs.SuccessPolicy switch
                 {
                     "SUCCEED_ON_ALL" => true,
                     "SUCCEED_ON_ONE" => false,
                     _ => throw new NullReferenceException()
                 };
-                var failAll = parentParallelNodeConfig.FailPolicy switch
+                var failAll = parentParallelNodeConfigs.FailPolicy switch
                 {
                     "FAIL_ON_ALL" => true,
                     "FAIL_ON_ONE" => false,
                     _ => throw new NullReferenceException()
                 };
-                var onAllFail = (failAll
+                var onAllFail = failAll
                     ? $"{parentIdString}ParallelFail = false;//需要failAll，初始值为true遇到成功情况置为false\n"
-                    : "//需要failOne，初始为false遇到失败才会置为true\n");
+                    : "//需要failOne，初始为false遇到失败才会置为true\n";
                 var successProcess =
                     (successAll
                         ? "//需要successAll，初始值为true遇到失败情况置为false\n"
                         : $"{parentIdString}ParallelSuccess = true;//需要successOne，初始为false遇到成功则置为true\n") +
                     onAllFail;
-                var onAllSuccess = (successAll
+                var onAllSuccess = successAll
                     ? $"{parentIdString}ParallelSuccess = false;//需要successAll，初始值为true遇到失败情况置为false\n"
-                    : "//需要successOne，初始为false遇到成功则置为true\n");
+                    : "//需要successOne，初始为false遇到成功则置为true\n";
                 var failProcess =
                     (failAll
                         ? "//需要failAll，初始值为true遇到成功情况置为false\n"
@@ -311,10 +350,10 @@ public static class Tools
         var statusVar = needResult
             ? $"private {CSharpStrings.BtStatusEnumName} {resultVarString} {{ get; set; }}\n"
             : "";
-        var mustStatusVar = $"private {CSharpStrings.BtStatusEnumName} {resultVarString} {{ get; set; }}\n";
+        var mustStatusVar =
+            $"private {CSharpStrings.BtStatusEnumName} {resultVarString} {{ get; set; }}\n"; //有子节点的情况，虽然父节点不要求状态，但是字节点需要
 
         var successString = needResult ? resultVarString + $" = {CSharpStrings.Success};\n" : "";
-        var invalidString = needResult ? resultVarString + $" = {CSharpStrings.Invalid};\n" : "";
         var failString = needResult ? resultVarString + $" = {CSharpStrings.Fail};\n" : "";
         var continueRunningString = $"{runningNodeString} = {id};\n"
                                     + $"{goNode}Result = {CSharpStrings.Running};\n"
@@ -322,13 +361,16 @@ public static class Tools
         var outRunningString = $"{runningNodeString} = -1;\n";
         string countString;
         var runningSwitch = $"case {id}:\n" + $"goto {idString}Run;\n";
-        ParallelNodeConfig? extraConfig = null;
+        INodeConfig? extraConfig = null;
         switch (nodeType)
         {
             case "PluginBehaviac.Nodes.DecoratorAlwaysSuccess":
-                acp2 = statusVar;
+                acp2 = mustStatusVar;
                 enterDo = successString;
                 outPutString = successString;
+                break;
+            case "PluginBehaviac.Nodes.DecoratorNot":
+                acp2 = mustStatusVar;
                 break;
             case "PluginBehaviac.Nodes.Sequence" or "PluginBehaviac.Nodes.And":
                 acp2 = mustStatusVar;
@@ -434,6 +476,41 @@ public static class Tools
                 enterDo = "\n";
                 // tail = "";
                 extraId = intId;
+                break;
+            case "PluginBehaviac.Nodes.SelectorProbability":
+                acp2 = mustStatusVar;
+                acp2 += $"private uint {idString}RandomMaxNum {{ get; set; }} = 0;\n";
+                acp2 += $"private ushort {idString}RandomNowNum {{ get; set; }} = 0;\n";
+                var allChildrenAttr = GetAllChildrenAttr(node, "Weight");
+                var allChildrenId = GetAllChildrenAttr(node, "Id");
+                var stringsEnumerable = Enumerable.Range(1, allChildrenAttr.Length).Select(x => allChildrenAttr[..x]);
+                var enumerable = stringsEnumerable.Select(aChildrenAttr =>
+                {
+                    var cSum = aChildrenAttr.Where(x => x.StartsWith("const"))
+                        .Select(x => int.Parse(CSharpStrings.RemoveParameterAndActionHead(x)))
+                        .Sum();
+                    var pStr = aChildrenAttr.Where(x => !x.StartsWith("const"))
+                        .Select(CSharpStrings.RemoveParameterAndActionHead)
+                        .Aggregate("", (s, x) => s + x + " + ");
+                    var armRight = pStr + cSum;
+                    return armRight;
+                }).ToArray();
+                var dictionary = allChildrenId.Zip(enumerable)
+                    .ToDictionary(pair => int.Parse(pair.First), pair => pair.Second);
+                extraConfig = new SelectorProbabilityConfig() {IdToExpression = dictionary};
+                var foo = enumerable[allChildrenAttr.Length - 1];
+
+                enterDo = $"{idString}RandomMaxNum = (uint)({foo});//获得权重总数\n";
+                enterDo += $"{idString}RandomNowNum = FrameRandom.Random({idString}RandomMaxNum);\n";
+                extraId = intId;
+
+                body =
+                    $"if({resultVarString} == {CSharpStrings.Running})\n{{\n{continueRunningString}\n}}\n{outRunningString}";
+                break;
+            case "PluginBehaviac.Nodes.DecoratorWeight":
+                acp2 = mustStatusVar;
+                enterDo = "//这个必然会在概率选择之下\n";
+
                 break;
             case "PluginBehaviac.Nodes.DecoratorLoopUntil":
                 acp2 = mustStatusVar;
@@ -553,7 +630,7 @@ public static class Tools
                 acp2 += $"private bool {idString}ParallelSuccess {{ get; set; }} = {successPolicyInit};\n";
                 acp2 += $"private bool {idString}ParallelFail {{ get; set; }} = {failurePolicyInit};\n";
                 acp2 += $"private bool {idString}ParallelRunning {{ get; set; }} = false;\n";
-                var allChildId = GetAllChildId(node);
+                var allChildId = GetAllChildrenAttr(node, "Id");
                 var aggregate = childFinishLoop
                     ? "//使用了childFinishLoop模式，所以不需要重置子节点状态到invalid\n"
                     : allChildId
@@ -668,21 +745,21 @@ public static class Tools
         }
 
         treeStatusValues += acp2;
-        res += localS + onEnter + enterDo + runLabel + s + body + outLabel + outPutString + tail;
+        res += onEnter + localS + enterDo + runLabel + s + body + outLabel + outPutString + tail;
         return res;
     }
 
-    private static string[] GetAllChildId(XElement node)
+    private static string[] GetAllChildrenAttr(XContainer node, string id)
     {
         return node.Element("Connector")?.Elements("Node")
-                   .Select(x => x.Attribute("Id")?.Value ?? throw new NullReferenceException()).ToArray() ??
+                   .Select(x => x.Attribute(id)?.Value ?? throw new NullReferenceException()).ToArray() ??
                throw new NullReferenceException();
     }
 
     private static string ConvertArmToFuncOrParam(string agentObjName, string r)
     {
         string rr;
-        if (r.Contains("(")) //是函数
+        if (r.Contains('(')) //是函数
         {
             CSharpStrings.FindReturnTypeAndEtc(r, agentObjName, out var meName);
             rr = meName;
@@ -718,7 +795,7 @@ public static class Tools
     private static string TransConnector(XElement connector, int parentId, int extraId, string parentString,
         string agentObjName,
         int nowCheckRunningNode,
-        ParallelNodeConfig? parallelNodeConfig,
+        INodeConfig? parallelNodeConfig,
         out string acp,
         out string aRunningSwitch, out string irs, out string subTreeConstruct)
     {
@@ -785,13 +862,19 @@ public static class Tools
     {
         var t = type;
         var pt = PType.System;
-        if (type.Contains("XMLPluginBehaviac."))
-        {
-            var replace = type.Replace("XMLPluginBehaviac.", "").Replace("_", "::");
-            pt = FindParamType(replace);
-            var lastIndexOf = replace.LastIndexOf(':') + 1;
-            t = lastIndexOf > 0 ? replace[lastIndexOf..] : replace;
-        }
+        if (!type.Contains("XMLPluginBehaviac."))
+            return pt switch
+            {
+                PType.Enum => t + " " + name + " {get;set;} = " + t + "." + value,
+                PType.Struct => t + " " + name + " {get;set;} = " + "new" + "()" +
+                                (CSharpStrings.CheckStructParamsAndFix(value, out var value2) ? value2 : ""),
+                PType.System => t + " " + name + " {get;set;} = " + value,
+                _ => throw new ArgumentOutOfRangeException()
+            };
+        var replace = type.Replace("XMLPluginBehaviac.", "").Replace("_", "::");
+        pt = FindParamType(replace);
+        var lastIndexOf = replace.LastIndexOf(':') + 1;
+        t = lastIndexOf > 0 ? replace[lastIndexOf..] : replace;
 
         return pt switch
         {
@@ -829,11 +912,20 @@ public enum PType
     System
 }
 
-internal record ParallelNodeConfig
+internal interface INodeConfig
+{
+}
+
+internal record ParallelNodeConfig : INodeConfig
 {
     public string ChildFinishPolicy { get; init; } = "";
 
     // public string ExitPolicy { get; init; } = "";
     public string SuccessPolicy { get; init; } = "";
     public string FailPolicy { get; init; } = "";
+}
+
+internal record SelectorProbabilityConfig : INodeConfig
+{
+    public IReadOnlyDictionary<int, string> IdToExpression { get; init; }
 }
