@@ -1,8 +1,13 @@
 {
   "version": 2,
-  "dgSpecHash": "cN9Q6fVLjt8IXYtL9dYtpo9QJFudLnQuQWmSMqpUs6Q9eBdTuB9IuK+cOULfrqKr2kXA8f62Z4rTzJwd6hXNCQ==",
+  "dgSpecHash": "5Pi62a/YlDrvfKcLhRNTiMY37DHoUaTDFEfT5JvRBVN8E20QFRsXyH9BgeOG/gL6nZSFwNXcJ5zyBBLiA1XClA==",
   "success": true,
   "projectFilePath": "E:\\workspace\\testDotNet\\behaviacRun\\BehavicOut\\BehaviacRunTest\\BehaviacRunTest.csproj",
-  "expectedPackageFiles": [],
+  "expectedPackageFiles": [
+    "C:\\Users\\win10\\.nuget\\packages\\microsoft.netcore.app.ref\\6.0.12\\microsoft.netcore.app.ref.6.0.12.nupkg.sha512",
+    "C:\\Users\\win10\\.nuget\\packages\\microsoft.windowsdesktop.app.ref\\6.0.12\\microsoft.windowsdesktop.app.ref.6.0.12.nupkg.sha512",
+    "C:\\Users\\win10\\.nuget\\packages\\microsoft.aspnetcore.app.ref\\6.0.12\\microsoft.aspnetcore.app.ref.6.0.12.nupkg.sha512",
+    "C:\\Users\\win10\\.nuget\\packages\\microsoft.netcore.app.host.win-x64\\6.0.12\\microsoft.netcore.app.host.win-x64.6.0.12.nupkg.sha512"
+  ],
   "logs": []
 }

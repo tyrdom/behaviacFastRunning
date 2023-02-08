@@ -8,12 +8,6 @@ public static class CSharpStrings
     public static string Running { get; } = $"{BtStatusEnumName}.BT_RUNNING";
     public static string Invalid { get; } = $"{BtStatusEnumName}.BT_INVALID";
     public static string RunTimeInterface => ":IBTree";
-    public static string RootRunningNodeString => "rootRunningNode";
-
-    public static Dictionary<string, (string CsharpType, bool IsNewType)> TypeDic => new()
-    {
-        {"int", ("int", false)}
-    };
 
     public static string RemoveParameterAndActionHead(string s)
     {
@@ -68,6 +62,8 @@ public static class CSharpStrings
             "Add" => " + ",
             "NotEqual" => " != ",
             "Mul" => " * ",
+            "Sub" => " - ",
+            "Div" => " / ",
             _ => throw new ArgumentOutOfRangeException($"cant match op : {op}")
         };
     }
@@ -103,14 +99,26 @@ public static class CSharpStrings
             ?.Where(element =>
                 element.Attribute("classfullname")?.Value.ToString() == findClass
             ).ToArray();
-        if (xElement == null) throw new NullReferenceException($"no method name {name} find class {findClass}");
+
+        if (xElement == null) throw new NullReferenceException($"no method <{name}> in find class {findClass}");
         {
+            var baseTypes = xElement.Select(xE => xE.Attribute("base")?.Value.ToString() ?? "");
+            var elements = xElements
+                ?.Where(element => baseTypes.Contains(
+                    element.Attribute("classfullname")?.Value.ToString())
+                ).ToArray();
+            var eee = elements != null ? xElement.Union(elements) : xElement;
             {
-                foreach (var element in xElement)
+                foreach (var element in eee)
                 {
                     var firstOrDefault = element.Elements("Method")
                         .FirstOrDefault(x => x.Attribute("Name")?.Value.ToString() == mName);
-                    if (firstOrDefault == null) continue;
+                    if (firstOrDefault == null)
+                    {
+                        // Console.Out.WriteLine($"not find {mName} in {element}");
+                        continue;
+                    }
+
                     var returnTypeAndEtc = firstOrDefault.Attribute("ReturnType")?.Value ??
                                            throw new NullReferenceException();
                     var xAttributes = firstOrDefault.Elements("Param").Select(x =>
@@ -123,7 +131,7 @@ public static class CSharpStrings
                 }
             }
 
-            throw new NullReferenceException($"no method name {name}");
+            throw new NullReferenceException($"no method name {name} <{mName}> findClass is {findClass}");
         }
     }
 
@@ -141,7 +149,7 @@ public static class CSharpStrings
         switch (findParamType)
         {
             case PType.Enum:
-                var lastIndexOf = typeString.LastIndexOf(':')+1;
+                var lastIndexOf = typeString.LastIndexOf(':') + 1;
                 return typeString[lastIndexOf..] + '.' + argString;
         }
 

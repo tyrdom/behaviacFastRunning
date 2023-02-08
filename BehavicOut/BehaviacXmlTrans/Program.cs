@@ -18,12 +18,12 @@ class Program
         {
             Console.Out.WriteLine("Complete");
         }
-
+        
         //   var dirPath = Path.Combine(Configs.Dir, Configs.EditDir, Configs.TestDir);
         //   var directoryInfo = new DirectoryInfo(dirPath);
         //   var enumerable = Configs.Director(directoryInfo).Where(x=>x.EndsWith(".xml"));
         // foreach( var x in enumerable){
-        //   
+        //     Console.Out.WriteLine($"NOW Cov {x}");
         //       var aXmlFile = Tools.ConvertAXmlFile(x, out var saveFileName);
         //       var output = Path.Combine(Configs.OutPutDir, saveFileName);
         //       var writeFile = WriteFile(output, aXmlFile);
