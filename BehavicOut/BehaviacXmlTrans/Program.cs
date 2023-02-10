@@ -9,30 +9,46 @@ class Program
 {
     static void Main(string[] args)
     {
+        var p = Path.Combine(Configs.Dir, Configs.EditDir);
         // var path = Path.Combine(Configs.Dir, Configs.EditDir, Configs.TestName);
-        // var convertAXmlFile = Tools.ConvertAXmlFile(path, out var outFileName);
+        //
+        // var convertAXmlFile = Tools.ConvertAXmlFile(path, p, out var outFileName);
         // var outPutFile = Path.Combine(Configs.OutPutDir, outFileName);
         // var writeFile = WriteFile(outPutFile, convertAXmlFile);
-        // Console.Out.WriteLine($"{convertAXmlFile}");
-        // if (writeFile.IsCompletedSuccessfully)
-        // {
-        //     Console.Out.WriteLine("Complete");
-        // }
+        // // Console.Out.WriteLine($"{convertAXmlFile}");
+       
+
+        var dirPath = Path.Combine(Configs.Dir, Configs.EditDir, Configs.TestDir);
+        var directoryInfo = new DirectoryInfo(dirPath);
+        var enumerable = Configs.Director(directoryInfo).Where(x => x.EndsWith(".xml")).ToArray();
+
+
+       
         
-          var dirPath = Path.Combine(Configs.Dir, Configs.EditDir, Configs.TestDir);
-          var directoryInfo = new DirectoryInfo(dirPath);
-          var enumerable = Configs.Director(directoryInfo).Where(x=>x.EndsWith(".xml"));
-        foreach( var x in enumerable){
+        foreach (var x in enumerable)
+        {
             Console.Out.WriteLine($"NOW Cov {x}");
-              var aXmlFile = Tools.ConvertAXmlFile(x, out var saveFileName);
-              var output = Path.Combine(Configs.OutPutDir, saveFileName);
-              var writeFile = WriteFile(output, aXmlFile);
-              if (writeFile.IsCompletedSuccessfully)
-              {
-                  Console.Out.WriteLine($"{x} is Complete");
-              }
-          }
+            var aXmlFile = Tools.ConvertAXmlFile(x, p, out var saveFileName);
+
+            var output = Path.Combine(Configs.OutPutDir, saveFileName);
+            
+            var writeFile2 = WriteFile(output, aXmlFile);
+            if (writeFile2.IsCompletedSuccessfully)
+            {
+                Console.Out.WriteLine("Complete");
+            }
+        }
+        
+        var select = enumerable.Select(x => x.Replace(p, "").Replace(".xml", ""));
+        var genConstructor = Tools.GenConstructor(select);
+        var output2 = Path.Combine(Configs.OutPutDir, "IBTree.cs");
+        var writeFile3 = WriteFile(output2, genConstructor);
+        if (writeFile3.IsCompletedSuccessfully)
+        {
+            Console.Out.WriteLine("Complete");
+        }
     }
+
 
     private static async Task WriteFile(string fileName, string contents)
     {

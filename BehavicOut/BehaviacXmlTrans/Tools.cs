@@ -6,18 +6,19 @@ namespace BehaviacXmlTrans;
 
 public static class Tools
 {
-    public static string ConvertAXmlFile(string path, out string csName)
+    public static string ConvertAXmlFile(string path, string editPath, out string csName)
     {
         var root = XElement.Load(path);
+
         var strings = path.Split(Path.DirectorySeparatorChar);
-        var valueTuple = strings.Aggregate(("", false), (tuple, s1) =>
-        {
-            var (item1, item2) = tuple;
-            var aa = item2 ? item1 + "_" + s1 : item1;
-            var bb = s1 == Configs.EditDir || item2;
-            return (aa, bb);
-        });
-        var fileName1 = valueTuple.Item1;
+        // var valueTuple = strings.Aggregate(("", false), (tuple, s1) =>
+        // {
+        //     var (item1, item2) = tuple;
+        //     var aa = item2 ? item1 + "_" + s1 : item1;
+        //     var bb = s1 == Configs.EditDir || item2;
+        //     return (aa, bb);
+        // });
+        var fileName1 = path.Replace(editPath, "").Replace(Path.DirectorySeparatorChar, '_');
         var lastIndexOf = fileName1[1..fileName1.LastIndexOf(".", StringComparison.Ordinal)];
         csName = lastIndexOf + ".cs";
         var s =
@@ -76,27 +77,33 @@ public static class Tools
         var head = $"public {CSharpStrings.BtStatusEnumName} Tick()\n{{\n NowLocalTick++;\n";
         var res = "";
         var node = xElement.Elements().FirstOrDefault(x => x.Name == "Node") ?? throw new NullReferenceException();
-        var runningSwitch = "";
+        var runningSwitchIds = new List<int>();
         var value = node.Attribute("Id")?.Value ?? throw new NullReferenceException();
         var result = int.TryParse(value, out var ii) ? ii : throw new ArgumentOutOfRangeException();
         var rootRunningNodeString = " Node" + result + "RunningNode";
         var rootRunningEnum = " Node" + result + "Running";
         const string tickCount = "\nprivate int NowLocalTick  = -1;\n";
-        var rootStatus = $"{tickCount}\nprivate int {rootRunningNodeString} = -1;\n";
+
 
         var s = TransNode(node, result, -1, "Root", agentObjName, result, null,
             out var tsp,
             out var aRunningSwitch, out var nodeResultInitString, out subTreeConstruct) + "\n";
+        runningSwitchIds.AddRange(aRunningSwitch);
+
+        var rootStatus = $"{tickCount}\nprivate {rootRunningEnum} {rootRunningNodeString} = {rootRunningEnum}.None;\n";
+        var s1 = runningSwitchIds.Aggregate("None,", (sd, iii) => sd + $"\nNode{iii},")[..^1];
+        rootStatus += $"private enum {rootRunningEnum} \n{{\n{s1}\n}}\n";
         var behaviortreestatus = "// BehaviorTreeStatus\n";
         treeStatusParamsAndAgentObj += behaviortreestatus + rootStatus + tsp;
-        runningSwitch += aRunningSwitch;
+
         res += s;
 
 
-        if (runningSwitch == "") return head + res + "\n}";
-
+        if (!runningSwitchIds.Any()) return head + res + "\n}";
+        var aggregate = runningSwitchIds.Aggregate("",
+            (seed, x) => seed + $"case {rootRunningEnum}.Node{x}:\ngoto Node{x}Run;\n");
         var switchString = nodeResultInitString + $"switch ({rootRunningNodeString})\n{{\n"
-                                                + runningSwitch + "\n}\n";
+                                                + aggregate + "\n}\n";
         return head + switchString + res + "\n}\n";
     }
 
@@ -104,10 +111,10 @@ public static class Tools
         string agentObjName, int runningGoNode,
         INodeConfig? nodeConfig,
         out string treeStatusValues,
-        out string headRunningSwitch, out string nodeResultInitString, out string subTreeConstruct)
+        out List<int> headRunningSwitchIdS, out string nodeResultInitString, out string subTreeConstruct)
     {
         treeStatusValues = "";
-        headRunningSwitch = "";
+        headRunningSwitchIdS = new List<int>();
         nodeResultInitString = "";
         subTreeConstruct = "";
         var firstOrDefault = node.Elements("Comment").FirstOrDefault();
@@ -219,7 +226,8 @@ public static class Tools
                 break;
             case "PluginBehaviac.Nodes.IfElse_condition":
 
-                outOpNeed = $"if({resultVarString} == {CSharpStrings.Fail})\n{{\ngoto Node{extraId}Run;\n}}";
+                outOpNeed =
+                    $"if({resultVarString} == {CSharpStrings.Fail})\n{{\ngoto Node{extraId}Run;\n}}"; // 这个下面如果放计算或者赋值会自己报错
                 break;
             case "PluginBehaviac.Nodes.IfElse_if":
                 onEnter = "// IfElse_if分支\n";
@@ -238,8 +246,8 @@ public static class Tools
                                       + "}\n"
                                       + $"Node{extraId}Result = {CSharpStrings.Success};\n"
                                       + "//如果切换了分支后再通过，那么会重置running下面running的节点到-1\n"
-                                      + $"if (Node{extraId}WhichBranchRunning != {parentId})\n{{\nNode{parentId}RunningNode = -1;\n}}";
-                // {
+                                      + $"if (Node{extraId}WhichBranchRunning != {parentId})\n{{\nNode{parentId}RunningNode = Node{parentId}Running.None;\n}}";
+                // {$"Node{runningGoNode}Running.None"
                 //     Node13RunningNode = -1;
                 // }
                 break;
@@ -280,7 +288,7 @@ public static class Tools
                 //     goto Node48Out;
                 // }
                 onEnter +=
-                    $"if(Node{parentId}RandomNowNum >= {aExp})\n{{\nNode{intId}RunningNode = -1;\ngoto Node{intId}Out;\n\n}}\n";
+                    $"if(Node{parentId}RandomNowNum >= {aExp})\n{{\nNode{intId}RunningNode = Node{intId}Running.None;\ngoto Node{intId}Out;\n\n}}\n";
                 localSwitch = true;
                 runningGoNode = intId;
                 break;
@@ -292,14 +300,14 @@ public static class Tools
                     : throw new KeyNotFoundException();
 
                 onEnter +=
-                    $"if(Node{extraId}WhichBranchEnter != {aExp2})\n{{\nNode{intId}RunningNode = -1;\ngoto Node{intId}Skip;\n\n}}\n";
+                    $"if(Node{extraId}WhichBranchEnter != {aExp2})\n{{\nNode{intId}RunningNode = Node{intId}Running.None;\ngoto Node{intId}Skip;\n\n}}\n";
                 localSwitch = true;
                 runningGoNode = intId;
                 parentVarNeedString = $"Node{extraId}Result = {resultVarString};\n";
                 skipString = skipLabel;
                 break;
             case "PluginBehaviac.Nodes.DecoratorWeight":
-                onEnter = "//概率权重节点之下\n";
+                onEnter = $"//概率权重节点之下{id}\n";
                 parentVarNeedString = $"Node{extraId}Result = {resultVarString};\n";
                 break;
             case "PluginBehaviac.Nodes.DecoratorLoop":
@@ -361,11 +369,11 @@ public static class Tools
                                      onAllSuccess +
                                      $"{parentIdString}ParallelRunning = true;//任何running都会使得并行节点running\n";
                 parentVarNeedString = $"switch({resultVarString})\n{{\n" +
-                            $"case {CSharpStrings.Success}:\n{successProcess}\nbreak;\n" +
-                            $"case {CSharpStrings.Fail}:\n{failProcess}\nbreak;\n" +
-                            $"case {CSharpStrings.Running}:\n{runningProcess}\nbreak;\n" +
-                            "default:\nthrow new ArgumentOutOfRangeException();" +
-                            "}\n";
+                                      $"case {CSharpStrings.Success}:\n{successProcess}\nbreak;\n" +
+                                      $"case {CSharpStrings.Fail}:\n{failProcess}\nbreak;\n" +
+                                      $"case {CSharpStrings.Running}:\n{runningProcess}\nbreak;\n" +
+                                      "default:\nthrow new ArgumentOutOfRangeException();" +
+                                      "}\n";
                 // switch (Node46Result)
                 // {
                 //
@@ -404,12 +412,14 @@ public static class Tools
 
         var successString = needResult ? resultVarString + $" = {CSharpStrings.Success};\n" : "";
         var failString = needResult ? resultVarString + $" = {CSharpStrings.Fail};\n" : "";
-        var continueRunningString = $"{runningNodeString} = {id};\n"
+        var continueRunningString = $"{runningNodeString} = {goNode}Running.Node{id};\n"
                                     + $"{goNode}Result = {CSharpStrings.Running};\n"
                                     + $"goto Node{runningGoNode}Out;\n";
-        var outRunningString = $"{runningNodeString} = -1;\n";
+        var stopRunningEnum = $"Node{runningGoNode}Running.None";
+        var outRunningString = $"{runningNodeString} = {stopRunningEnum};\n"; //这里runningGoNode要保证不会变了
         string countString;
-        var runningSwitch = $"case {id}:\n" + $"goto {idString}Run;\n";
+        var runningSwitchId = intId;
+        // $"case {id}:\n" + $"goto {idString}Run;\n";
         INodeConfig? extraConfig = null;
         var loopInOneTick = false; // 循环类 一个tick内完成
         switch (nodeType)
@@ -524,7 +534,7 @@ public static class Tools
                           + outRunningString
                         : "";
 
-                    headRunningSwitch += runningSwitch;
+                    headRunningSwitchIdS.Add(runningSwitchId);
                     body = varString + runningNow;
                 }
                 else
@@ -590,6 +600,7 @@ public static class Tools
                 extraId = intId;
                 body =
                     $"if({resultVarString} == {CSharpStrings.Running})\n{{\n{continueRunningString}\n}}\n{outRunningString}";
+                headRunningSwitchIdS.Add(intId);
                 break;
             case "PluginBehaviac.Nodes.SelectorProbability":
                 acp2 = mustStatusVar;
@@ -617,13 +628,14 @@ public static class Tools
                 enterDo = $"{idString}RandomMaxNum = (uint)({foo});//获得权重总数\n";
                 enterDo += $"{idString}RandomNowNum = FrameRandom.Random({idString}RandomMaxNum);\n";
                 extraId = intId;
-
                 body =
                     $"if({resultVarString} == {CSharpStrings.Running})\n{{\n{continueRunningString}\n}}\n{outRunningString}";
+                headRunningSwitchIdS.Add(intId);
                 break;
             case "PluginBehaviac.Nodes.DecoratorWeight":
                 acp2 = mustStatusVar;
-                enterDo = "//这个必然会在概率选择之下\n";
+                enterDo = $"//这个必然会在概率选择之下{id}\n";
+                outPutString = $"//output这个必然会在概率选择之下{id}\n";
                 break;
 
             case "PluginBehaviac.Nodes.DecoratorLoopUntil" or "PluginBehaviac.Nodes.DecoratorLoopUntilSuccessOrRunning":
@@ -651,14 +663,9 @@ public static class Tools
                         throw new ArgumentOutOfRangeException();
                 }
 
-                if (!loopInOneTick)
-                {
-                    headRunningSwitch += runningSwitch;
-                }
-                else
-                {
-                    enterDo += "//配置为一帧内循环，不会记录此running跳转\n";
-                }
+
+                headRunningSwitchIdS.Add(runningSwitchId);
+
 
                 if (countString == "const int -1")
                 {
@@ -681,7 +688,7 @@ public static class Tools
                 {
                     acp2 += "private int " + idString + "NowRunTime = 0;\n";
                     acp2 += "private int " + idString + "MaxRunTime = -1;\n";
-                    enterDo =
+                    enterDo +=
                         $"{idString}NowRunTime = 0;\n{idString}MaxRunTime = {ConvertArmToFuncOrParam(agentObjName, countString, idString, out var acpAdd)};\n";
                     acp2 += acpAdd;
                     body += loopInOneTick
@@ -702,7 +709,7 @@ public static class Tools
             case "PluginBehaviac.Nodes.DecoratorLoop":
                 acp2 = statusVar;
                 countString = node.Attribute("Count")?.Value ?? throw new NullReferenceException();
-                headRunningSwitch += runningSwitch;
+                headRunningSwitchIdS.Add(runningSwitchId);
                 //Node13Result= EBTStatus.BT_RUNNING;
                 // goto Node13Out;
 
@@ -738,7 +745,7 @@ public static class Tools
                 var waitTickString = node.Attribute("Frames")?.Value ?? throw new NullReferenceException();
                 var waitTick = ConvertArmToFuncOrParam(agentObjName, waitTickString, idString, out var acp2a);
                 acp2 += acp2a;
-                headRunningSwitch += runningSwitch;
+                headRunningSwitchIdS.Add(runningSwitchId);
                 enterDo = $"{idString}StartFrame = NowLocalTick;\n";
                 body = $"if (NowLocalTick - {idString}StartFrame + 1 >= {waitTick})\n"
                        + "{\n" + continueRunningString + "}\n"
@@ -809,7 +816,7 @@ public static class Tools
                                                     allChildrenCanRun.Aggregate("",
                                                         (seed, x) =>
                                                             seed +
-                                                            $"Node{x}RunningNode = -1;\nNode{x}Result = {CSharpStrings.Invalid};\n") +
+                                                            $"Node{x}RunningNode = Node{x}Running.None;\nNode{x}Result = {CSharpStrings.Invalid};\n") +
                                                     "}\n",
                     "EXIT_NONE" => "//EXIT_NONE 退出不做任何操作，可保持原有节点的状态\n",
                     _ => throw new ArgumentOutOfRangeException()
@@ -834,7 +841,7 @@ public static class Tools
                         + "}\n"
                         + outRunningString;
 
-                    headRunningSwitch += runningSwitch;
+                    headRunningSwitchIdS.Add(runningSwitchId);
                     body += runningNow;
                 }
 
@@ -876,7 +883,7 @@ public static class Tools
                 out var irs, out var subTreeConstructChildren);
             s += s1;
             treeStatusValues += acp;
-            headRunningSwitch += aRunningSwitch;
+            headRunningSwitchIdS.AddRange(aRunningSwitch);
             nodeResultInitString += irs;
             subTreeConstruct += subTreeConstructChildren;
         }
@@ -887,11 +894,19 @@ public static class Tools
               "\n";
 
         var localS = "";
-        if (localSwitch) //并行，选择监测的分支会有局部的running情况，下属节点的running归于对应分支
+        if (localSwitch) //并行，选择监测的分支会有局部的running情况，下属节点的running归于对应分支 这个地方空字符串也会生成switch 待优化
         {
-            acp2 += $"private int Node{runningGoNode}RunningNode = -1;\n";
-            localS = $"switch (Node{runningGoNode}RunningNode)\n{{\n" + headRunningSwitch + "\n}\n";
-            headRunningSwitch = "";
+            acp2 +=
+                $"private Node{runningGoNode}Running Node{runningGoNode}RunningNode = {stopRunningEnum};\n";
+            var s2 = headRunningSwitchIdS.Aggregate("None,", ((s1, i) => s1 + $"\nNode{i},"))[..^1];
+            acp2 += $"private enum Node{runningGoNode}Running {{" + s2 +
+                    "}\n";
+            var aggregate = headRunningSwitchIdS
+                .Select(x => $"case Node{runningGoNode}Running.Node{x}:\ngoto Node{x}Run;\n").Aggregate(
+                    "", (seed, x) =>
+                        seed + x);
+            localS = $"switch (Node{runningGoNode}RunningNode)\n{{\n" + aggregate + "\n}\n";
+            headRunningSwitchIdS = new List<int>();
         }
 
         treeStatusValues += acp2;
@@ -985,7 +1000,7 @@ public static class Tools
         int nowCheckRunningNode,
         INodeConfig? parallelNodeConfig,
         out string acp,
-        out string aRunningSwitch, out string irs, out string subTreeConstruct)
+        out List<int> aRunningSwitchId, out string irs, out string subTreeConstruct)
     {
         var id = connector.Attribute("Identifier")?.Value ?? throw new NullReferenceException();
 
@@ -1015,7 +1030,7 @@ public static class Tools
         var res = "";
         acp = "";
         irs = "";
-        aRunningSwitch = "";
+        aRunningSwitchId = new List<int>();
         subTreeConstruct = "";
         foreach (var xElement in xElements)
         {
@@ -1026,7 +1041,7 @@ public static class Tools
                             "\n";
             res += transNode;
             acp += aStr;
-            aRunningSwitch += ars;
+            aRunningSwitchId.AddRange(ars);
             irs += airs;
             subTreeConstruct += subTreeConstruct2;
         }
@@ -1162,6 +1177,40 @@ public static class Tools
             "struct" => PType.Struct,
             _ => throw new NullReferenceException()
         };
+    }
+
+    public static string GenConstructor(IEnumerable<string> list)
+    {
+        //     using behaviac;
+        //
+        // public interface IBTree
+        // {
+        //     public EBTStatus Tick();
+        // }
+        var interfaceStr =
+            "using System;\nusing behaviac;\nusing SGame.InGame.GameLogic;\n\npublic interface IBTree\n{\npublic EBTStatus Tick();\n}\n\n\n";
+        // public static class BTreeStandard
+        // {
+        //     public static IBTree GenByConfig(string s, ObjAgent a)
+        //     {
+        //         return s switch
+        //         {
+        //             "aaa" => new WrapperAI_Hero_Jup_Strategy(a),
+        //             _ => throw new ArgumentOutOfRangeException(nameof(s), s, null)
+        //         };
+        //     }
+        // }
+        var enumerable = list.Select(x =>
+                $" \"{x.Replace(Path.DirectorySeparatorChar, '/')[1..]}\" => new {x.Replace(Path.DirectorySeparatorChar, '_')[1..]}(a),\n")
+            .Aggregate("", ((s, s1) => s + s1));
+        var staticFunc = "public static class BTreeStandard\n" +
+                         "{\n" +
+                         "public static IBTree GenByConfig(string s, ObjAgent a)\n" +
+                         "{\n" +
+                         "return s switch\n{\n" +
+                         enumerable +
+                         "_ => throw new ArgumentOutOfRangeException(nameof(s), s, null)\n};\n}\n}\n";
+        return interfaceStr + staticFunc;
     }
 }
 
