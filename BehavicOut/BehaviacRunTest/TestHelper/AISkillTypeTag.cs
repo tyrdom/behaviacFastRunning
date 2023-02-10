@@ -1,4 +1,6 @@
-internal enum AISkillTypeTag
+public enum AISkillTypeTag
 {
-    None
+    None,
+    Atk,
+    Poke
 }

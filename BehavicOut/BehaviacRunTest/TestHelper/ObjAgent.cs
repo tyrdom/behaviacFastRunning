@@ -26,4 +26,15 @@ public class ObjAgent
     {
         return 1;
     }
+
+
+    public SkillSlotType GetTargetSkillSlotType(uint pTargetHero, int i, List<AISearchSkillType> aiSearchSkillTypes, List<AISkillTypeTag> aiSkillTypeTags, List<AISkillTypeTag> list, int i1)
+    {
+        throw new NotImplementedException();
+    }
+
+    public void GetEnemyActorInRange(int i, List<AISearcherType> aiSearcherTypes, List<int> testIntList, List<int> ints)
+    {
+        throw new NotImplementedException();
+    }
 }

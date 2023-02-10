@@ -24,7 +24,9 @@ public static class Configs
 
     public static string EditDir => "behaviors";
 
-    // public static string TestName => $"WrapperAI{Path.DirectorySeparatorChar}Hero{Path.DirectorySeparatorChar}AI{Path.DirectorySeparatorChar}AI_Personal_Decisions.xml";
+    // Hero\AI\Decision
+    // public static string TestName =>
+        // $"WrapperAI{Path.DirectorySeparatorChar}Hero{Path.DirectorySeparatorChar}AI{Path.DirectorySeparatorChar}Decision{Path.DirectorySeparatorChar}Hero_Common_Equip_Operation.xml";
     // public static string TestName => $"WrapperAI{Path.DirectorySeparatorChar}Monster{Path.DirectorySeparatorChar}BTMonsterPassive.xml";
     public static string TestName => $"WrapperAI{Path.DirectorySeparatorChar}NewTest{Path.DirectorySeparatorChar}TestNode3.xml";
 

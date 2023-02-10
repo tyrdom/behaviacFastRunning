@@ -9,7 +9,15 @@ public static class CSharpStrings
     public static string Invalid { get; } = $"{BtStatusEnumName}.BT_INVALID";
     public static string RunTimeInterface => ":IBTree";
 
-    public static string RemoveParameterAndActionHead(string s)
+
+    public static Dictionary<string, string> CSTypeShort = new()
+    {
+        {"System.UInt32", "uint"}, {"System.String", "string"}, {"System.Int32", "int"}, {"System.Single", "float"},
+        {"System.Boolean", "bool"}, {"System.Int16", "short"}, {"System.UInt16", "ushort"}, {"System.Int64", "long"},
+        {"System.UInt64", "ulong"}, {"System.Byte", "ubyte"}, {"System.SByte", "sbyte"}
+    };
+
+    public static string SimpleRemoveParameterAndActionHead(string s)
     {
         //struct常量 :const VInt3 {x=0;y=0;z=0;}
         //变量 SGame::InGame::GameLogic::ObjAgent
@@ -41,7 +49,7 @@ public static class CSharpStrings
         var of = s.LastIndexOf('{');
         replace2 = "";
         if (of < 0) return false;
-        Console.Out.WriteLine("is Custom Type");
+        // Console.Out.WriteLine("is Custom Type");
         var indexOf = s.LastIndexOf('}') - 1;
         var values = s[(of + 1)..indexOf];
         var replace = values.Replace(';', ',');
@@ -84,11 +92,12 @@ public static class CSharpStrings
         {
             "BT_SUCCESS" => Success,
             "BT_FAILURE" => Fail,
-            _ => throw new Exception()
+            _ => throw new ArgumentOutOfRangeException($"行为树指定的结果不能为 {resOp}")
         };
     }
 
-    public static string FindReturnTypeAndEtc(string name, string objName, out string methodName)
+    public static string FindReturnTypeAndEtc(string name, string objName, string nodeId, out string methodName,
+        out string constListParam)
     {
         var findClass = FindClassAndEtc(name, out var mName, out var parameters);
 
@@ -121,12 +130,22 @@ public static class CSharpStrings
 
                     var returnTypeAndEtc = firstOrDefault.Attribute("ReturnType")?.Value ??
                                            throw new NullReferenceException();
-                    var xAttributes = firstOrDefault.Elements("Param").Select(x =>
-                        x.Attribute("Type")?.Value ?? throw new NullReferenceException()).Zip(parameters);
-                    var s1 = xAttributes.Aggregate(" ", (s, x) => s + FuncParameterFix(x.First, x.Second) + ',')[..^1];
+                    var xAttributes = firstOrDefault.Elements("Param").Select(
+                        x => (x.Attribute("Name")?.Value ?? throw new NullReferenceException(),
+                            x.Attribute("TypeFullName")?.Value ?? throw new NullReferenceException())
+                    ).Zip(parameters);
 
-                    methodName = objName + "." + mName + "(" + s1 +
+                    var (s1, s2) = xAttributes.Aggregate
+                    ((" ", ""), (s, x) =>
+                    {
+                        var t1 = s.Item1 +
+                                 FuncParameterFix(x.First.Item1, x.First.Item2, x.Second, nodeId, out var cs) + ',';
+                        var t2 = s.Item2 + cs;
+                        return (t1, t2);
+                    });
+                    methodName = objName + "." + mName + "(" + s1[..^1] +
                                  ")";
+                    constListParam = s2;
                     return returnTypeAndEtc;
                 }
             }
@@ -135,30 +154,63 @@ public static class CSharpStrings
         }
     }
 
-    private static string FuncParameterFix(string typeString, string argString)
+    private static string FuncParameterFix(string paramName, string typeString, string argString, string nodeId,
+        out string constList)
     {
-        if (!argString.StartsWith('"') && argString.Contains("::")) //非字符串并且带有::认为是变量，有问题后面再传入变量名
+        constList = "";
+        if (!argString.StartsWith('"') && argString.Contains("::")) //非字符串并且带有::认为是变量，有问题后面再传入变量名到参数表里找
         {
-            return RemoveParameterAndActionHead(argString);
+            return SimpleRemoveParameterAndActionHead(argString);
         }
 
         //通过类型来给出正确的常量参数写法
-        //错误1 不给枚举写枚举类型 Self.SGame::InGame::GameLogic::ObjAgent::GetSkillAttackRange(SLOT_SKILL_2)
-        //错误2 浮点数没有f结尾 Self.SGame::InGame::GameLogic::ObjAgent::PlayAnimation(&quot;Idle&quot;,0.15,0,true)
-        var findParamType = Tools.FindParamType(typeString, true);
-        switch (findParamType)
+        // //错误1 不给枚举写枚举类型 Self.SGame::InGame::GameLogic::ObjAgent::GetSkillAttackRange(SLOT_SKILL_2)
+        // //错误2 浮点数没有f结尾 Self.SGame::InGame::GameLogic::ObjAgent::PlayAnimation(&quot;Idle&quot;,0.15,0,true)
+        var paramType = Tools.FindParamType(typeString, out typeString);
+
+        // var findParamType = Tools.FindCustomParamType(typeString, out var typeString2);
+
+        switch (paramType)
         {
             case PType.Enum:
-                var lastIndexOf = typeString.LastIndexOf(':') + 1;
-                return typeString[lastIndexOf..] + '.' + argString;
+                return typeString + '.' + argString;
+            case PType.Struct:
+                return "new" + "()" +
+                       (CheckStructParamsAndFix(argString, out var value2) ? value2 : "");
+            case PType.System:
+                return typeString switch
+                {
+                    "float" => argString + 'f',
+
+                    _ => argString
+                };
+            case PType.Array:
+                var indexOf = argString.IndexOf(':') + 1;
+                var s2 = argString[indexOf..];
+                var findParamType = Tools.FindParamType(typeString, out var typeString2);
+                var varName = nodeId + "Func" + paramName;
+                if (findParamType == PType.Array)
+                {
+                    throw new NotSupportedException("not support array in array");
+                }
+
+                if (s2 == "")
+                {
+                    constList = $"private List<{typeString2}> {varName} = new List<{typeString2}>(){{}};//常数数组参数只用创建1次\n";
+                    return varName;
+                }
+
+                var replace = s2.Split('|');
+                var s1 = replace.Select(x => FuncParameterFix(paramName, typeString, x, nodeId, out _))
+                    .Aggregate("", (s, x) => s + ',' + x)[1..];
+                constList = $"private List<{typeString2}> {varName} = new List<{typeString2}>(){{{s1}}};//常数数组参数只用创建1次\n";
+                return varName;
+
+            default:
+                throw new ArgumentOutOfRangeException();
         }
 
-        return typeString switch
-        {
-            "float" => argString + 'f',
-
-            _ => argString
-        };
+        throw new NotSupportedException($"cant find {typeString}");
     }
 
     private static string FindClassAndEtc(string name, out string methodName, out string[] parameters)
