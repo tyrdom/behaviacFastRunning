@@ -1088,7 +1088,13 @@ public static class Tools
                 return t + " " + name + "  = " + "new" + "()" +
                        (CSharpStrings.CheckStructParamsAndFix(value, out var value2) ? value2 : "");
             case PType.System:
-                return t + " " + name + " = " + value;
+                var vv = t switch
+                {
+                    "float" => value + "f",
+                    "string" => $"\"{value}\"",
+                    _ => value
+                };
+                return t + " " + name + " = " + vv;
             case PType.Array:
                 FindParamType(t, out var t2);
                 var indexOf = value.IndexOf(':') + 1;
