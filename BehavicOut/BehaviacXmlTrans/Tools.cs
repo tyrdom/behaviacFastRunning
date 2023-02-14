@@ -161,7 +161,7 @@ public static class Tools
         var outOpNeed = "";
         var skipString = "";
         var onEnter = "";
-
+        var optEnterLabel = "";
         switch (parentTypeString)
         {
             case "Root":
@@ -223,7 +223,7 @@ public static class Tools
             case "PluginBehaviac.Nodes.IfElse_condition":
 
                 outOpNeed =
-                    $"if({resultVarString} == {CSharpStrings.Fail})\n{{\ngoto Node{extraId}Run;\n}}"; // 这个下面如果放计算或者赋值会自己报错
+                    $"if({resultVarString} == {CSharpStrings.Fail})\n{{\ngoto Node{extraId}Enter;\n}}"; // 这个下面如果放计算或者赋值会自己报错
                 break;
             case "PluginBehaviac.Nodes.IfElse_if":
                 onEnter = "// IfElse_if分支\n";
@@ -231,6 +231,7 @@ public static class Tools
                 outOpNeed = $"goto Node{parentId}Out;\n";
                 break;
             case "PluginBehaviac.Nodes.IfElse_else":
+                optEnterLabel = $"{idString}Enter:\n";
                 parentVarNeedString = parentVarString + " = " + resultVarString + ";\n";
                 break;
             case "PluginBehaviac.Nodes.WithPreconditionPrecondition":
@@ -906,7 +907,8 @@ public static class Tools
         }
 
         treeStatusValues += acp2;
-        res += onEnter + localS + enterDo + runLabel + s + body + outLabel + outPutString + parentVarNeedString +
+        res += onEnter + optEnterLabel + localS + enterDo + runLabel + s + body + outLabel + outPutString +
+               parentVarNeedString +
                outOpNeed +
                skipString;
         return res;
