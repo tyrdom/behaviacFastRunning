@@ -6,18 +6,12 @@ namespace BehaviacXmlTrans;
 
 public static class Tools
 {
-    public static string ConvertAXmlFile(string path, string editPath, out string csName)
+    public static string ConvertAXmlFile(string path, string editPath, out string csName,
+        out string objName)
     {
         var root = XElement.Load(path);
 
-        var strings = path.Split(Path.DirectorySeparatorChar);
-        // var valueTuple = strings.Aggregate(("", false), (tuple, s1) =>
-        // {
-        //     var (item1, item2) = tuple;
-        //     var aa = item2 ? item1 + "_" + s1 : item1;
-        //     var bb = s1 == Configs.EditDir || item2;
-        //     return (aa, bb);
-        // });
+
         var fileName1 = path.Replace(editPath, "").Replace(Path.DirectorySeparatorChar, '_');
         var lastIndexOf = fileName1[1..fileName1.LastIndexOf(".", StringComparison.Ordinal)];
         csName = lastIndexOf + ".cs";
@@ -37,8 +31,9 @@ public static class Tools
         // Console.Out.WriteLine(xAttribute.Name);
 
         var value = element.Attribute("AgentType")?.Value ?? throw new NullReferenceException();
-        var className = CSharpStrings.SimpleRemoveParameterAndActionHead(value);
-        var name = $"private {className} {className}  " + ";\n";
+        var objClassName = CSharpStrings.SimpleRemoveParameterAndActionHead(value);
+        objName = objClassName;
+        var name = $"private {objClassName} {objClassName}  " + ";\n";
         s += name;
 
         var enumerable = element.Elements();
@@ -55,14 +50,15 @@ public static class Tools
                     break;
                 case "Connector":
 
-                    var result = ConnectorTransFromRoot(xElement, className, out var countParams, out subtreeConstruct);
+                    var result = ConnectorTransFromRoot(xElement, objClassName, out var countParams,
+                        out subtreeConstruct);
                     s += countParams;
                     s += result;
                     break;
             }
         }
 
-        var constructor = $"public {lastIndexOf}({className} a)\n{{\n{className} = a;\n{subtreeConstruct}}}\n";
+        var constructor = $"public {lastIndexOf}({objClassName} a)\n{{\n{objClassName} = a;\n{subtreeConstruct}}}\n";
         s += constructor;
 
         s += "\n}";
@@ -1179,7 +1175,7 @@ public static class Tools
         };
     }
 
-    public static string GenConstructor(IEnumerable<string> list)
+    public static string GenConstructor(IEnumerable<(string, string objTypeName)> list)
     {
         //     using behaviac;
         //
@@ -1200,12 +1196,13 @@ public static class Tools
         //         };
         //     }
         // }
+
         var enumerable = list.Select(x =>
-                $" \"{x.Replace(Path.DirectorySeparatorChar, '/')[1..]}\" => new {x.Replace(Path.DirectorySeparatorChar, '_')[1..]}(a),\n")
+                $" \"{x.Item1.Replace(Path.DirectorySeparatorChar, '/')[1..]}\" => new {x.Item1.Replace(Path.DirectorySeparatorChar, '_')[1..]}(({x.objTypeName})a),\n")
             .Aggregate("", ((s, s1) => s + s1));
         var staticFunc = "public static class BTreeStandard\n" +
                          "{\n" +
-                         "public static IBTree GenByConfig(string s, ObjAgent a)\n" +
+                         $"public static IBTree GenByConfig(string s, {Configs.AgentBaseOrInterface} a)\n" +
                          "{\n" +
                          "return s switch\n{\n" +
                          enumerable +

@@ -1,6 +1,6 @@
 ﻿using behaviac;
 
-public class ObjAgent
+public class ObjAgent:BTBaseAgent
 {
     public bool IsInValidVint3(VInt3 testVar)
     {

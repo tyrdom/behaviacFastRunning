@@ -30,12 +30,12 @@ public static class Configs
     // public static string TestName => $"WrapperAI{Path.DirectorySeparatorChar}Monster{Path.DirectorySeparatorChar}BTMonsterPassive.xml";
     public static string TestName => $"WrapperAI{Path.DirectorySeparatorChar}NewTest{Path.DirectorySeparatorChar}TestNode3.xml";
 
-    public static string TestDir => $"WrapperAI{Path.DirectorySeparatorChar}Hero";
+    public static string TestDir => $"WrapperAI";
 
     public static XElement MetaXml { get; } =
         XElement.Load(GetMeta());
 
-
+    public static string AgentBaseOrInterface { get; } = "BTBaseAgent";
     private static string GetMeta()
     {
         var dir = Path.Combine(Dir, "behaviors", "behaviac_meta");
