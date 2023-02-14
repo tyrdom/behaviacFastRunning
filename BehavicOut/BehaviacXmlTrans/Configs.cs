@@ -13,7 +13,8 @@ public static class Configs
 
     // public static string OutPutDir { get; } = GetOutputDir();
     // D:\Client\Project\Assets\Scripts\SGame\InGame\GameLogic\SimpleAI\AutoGen
-    public static string OutPutDir { get; } = "D:\\Client\\Project\\Assets\\Scripts\\SGame\\InGame\\GameLogic\\SimpleAI\\AutoGen";
+    public static string OutPutDir => "D:\\Client\\Project\\Assets\\Scripts\\SGame\\InGame\\GameLogic\\SimpleAI\\AutoGen";
+
     private static string GetOutputDir()
     {
         var directoryName = Path.GetDirectoryName(LocalTestDir) ?? throw new Exception("cant find dir");
