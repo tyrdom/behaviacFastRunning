@@ -11,8 +11,9 @@ public static class Configs
         Path.GetDirectoryName(Path.GetDirectoryName(Path.GetDirectoryName(Environment.CurrentDirectory))) ??
         throw new Exception("cant find dir");
 
-    public static string OutPutDir { get; } = GetOutputDir();
-
+    // public static string OutPutDir { get; } = GetOutputDir();
+    // D:\Client\Project\Assets\Scripts\SGame\InGame\GameLogic\SimpleAI\AutoGen
+    public static string OutPutDir { get; } = "D:\\Client\\Project\\Assets\\Scripts\\SGame\\InGame\\GameLogic\\SimpleAI\\AutoGen";
     private static string GetOutputDir()
     {
         var directoryName = Path.GetDirectoryName(LocalTestDir) ?? throw new Exception("cant find dir");

@@ -744,7 +744,7 @@ public static class Tools
                 acp2 += acp2a;
                 headRunningSwitchIdS.Add(runningSwitchId);
                 enterDo = $"{idString}StartFrame = NowLocalTick;\n";
-                body = $"if (NowLocalTick - {idString}StartFrame + 1 >= {waitTick})\n"
+                body = $"if (NowLocalTick - {idString}StartFrame < {waitTick})\n"
                        + "{\n" + continueRunningString + "}\n"
                        + outRunningString
                        + $"{resultVarString} = {CSharpStrings.Success};\n";
