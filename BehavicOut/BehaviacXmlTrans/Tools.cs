@@ -1,4 +1,5 @@
-﻿using System.Collections.Immutable;
+﻿
+using System.Collections.Immutable;
 using System.Xml.Linq;
 using Microsoft.VisualBasic;
 
@@ -404,6 +405,9 @@ public static class Tools
         var statusVar = needResult
             ? $"private {CSharpStrings.BtStatusEnumName} {resultVarString};\n"
             : "";
+        var statusVarInitSuccess = needResult
+            ? $"private {CSharpStrings.BtStatusEnumName} {resultVarString} = {CSharpStrings.Success};\n"
+            : "";
         var mustStatusVar =
             $"private {CSharpStrings.BtStatusEnumName} {resultVarString};\n"; //有子节点的情况，虽然父节点不要求状态，但是字节点需要
 
@@ -543,9 +547,10 @@ public static class Tools
                     var b = resultVarString + " = " + stringToEnum + ";\n";
                     body = a + b;
                 }
-
                 break;
             case "PluginBehaviac.Nodes.Assignment":
+                acp2 += statusVarInitSuccess; 
+               
                 var l = node.Attribute("Opl")?.Value ??
                         throw new NullReferenceException($"not Res @ {id}");
                 var r = node.Attribute("Opr")?.Value ??
@@ -554,7 +559,7 @@ public static class Tools
                 acp2 += constListParam;
                 body = CSharpStrings.SimpleRemoveParameterAndActionHead(l) + " = " +
                        rr + ";\n";
-                parentVarNeedString = "";
+                // parentVarNeedString = "";
                 break;
             case "PluginBehaviac.Nodes.Compute":
                 parentVarNeedString = "";
