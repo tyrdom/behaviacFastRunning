@@ -581,7 +581,7 @@ public static class Tools
                 // private int Node11WhichBranchRunning { get; set; } = -1;
                 acp2 = mustStatusVar;
                 acp2 += $"private int {idString}WhichBranchRunning = -1;\n";
-                enterDo = "\n";
+                enterDo = failString;
                 // tail = "";
                 extraId = intId;
                 break;
