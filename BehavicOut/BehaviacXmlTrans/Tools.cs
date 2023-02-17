@@ -1,5 +1,4 @@
-﻿
-using System.Collections.Immutable;
+﻿using System.Collections.Immutable;
 using System.Xml.Linq;
 using Microsoft.VisualBasic;
 
@@ -16,10 +15,11 @@ public static class Tools
         var fileName1 = path.Replace(editPath, "").Replace(Path.DirectorySeparatorChar, '_');
         var lastIndexOf = fileName1[1..fileName1.LastIndexOf(".", StringComparison.Ordinal)];
         csName = lastIndexOf + ".cs";
-        var s =
-            "using System;\nusing behaviac;\nusing SGame.InGame.GameLogic;\nusing PBConfig;\nusing PB;\nusing System.Collections.Generic;\n\npublic class " +
-            lastIndexOf +
-            CSharpStrings.RunTimeInterface + "\n{\n";
+        var debugString = Configs.DebugMode ? $"#define {Configs.DebugModeString}\n" : "";
+        var s = debugString +
+                "using System;\nusing behaviac;\nusing SGame.InGame.GameLogic;\nusing PBConfig;\nusing PB;\nusing System.Collections.Generic;\n\npublic class " +
+                lastIndexOf +
+                CSharpStrings.RunTimeInterface + "\n{\n";
 
         // foreach (var xAttribute in rootFirstAttribute)
         // {
@@ -71,7 +71,8 @@ public static class Tools
         out string treeStatusParamsAndAgentObj, out string subTreeConstruct)
     {
         treeStatusParamsAndAgentObj = "\n";
-        var head = $"public {CSharpStrings.BtStatusEnumName} Tick()\n{{\n NowLocalTick++;\n";
+        var head =
+            $"public {CSharpStrings.BtStatusEnumName} Tick()\n{{\n NowLocalTick = {Configs.GetTickFuncString};\n";
         var res = "";
         var node = xElement.Elements().FirstOrDefault(x => x.Name == "Node") ?? throw new NullReferenceException();
         var runningSwitchIds = new List<int>();
@@ -146,6 +147,7 @@ public static class Tools
         // }
 
         var runLabel = idString + "Run:\n";
+        var debugLogString = Configs.DebugMode ? Configs.DebugLogString(intId) : "";
         var outLabel = idString + "Out:\n";
         var skipLabel = idString + "Skip:\n"; //部分情况使用
         res = res + "//" + idString + "\n";
@@ -547,10 +549,11 @@ public static class Tools
                     var b = resultVarString + " = " + stringToEnum + ";\n";
                     body = a + b;
                 }
+
                 break;
             case "PluginBehaviac.Nodes.Assignment":
-                acp2 += statusVarInitSuccess; 
-               
+                acp2 += statusVarInitSuccess;
+
                 var l = node.Attribute("Opl")?.Value ??
                         throw new NullReferenceException($"not Res @ {id}");
                 var r = node.Attribute("Opr")?.Value ??
@@ -912,7 +915,8 @@ public static class Tools
         }
 
         treeStatusValues += acp2;
-        res += onEnter + optEnterLabel + localS + enterDo + runLabel + s + body + outLabel + outPutString +
+        res += onEnter + optEnterLabel + localS + enterDo + runLabel + debugLogString + s + body + outLabel +
+               outPutString +
                parentVarNeedString +
                outOpNeed +
                skipString;

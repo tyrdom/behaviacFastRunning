@@ -7,13 +7,16 @@ public static class Configs
     public static string Dir => "D:\\Client\\Project\\BTWorkspace";
     // public static string Dir => "/Users/tianhao/Library/CloudStorage/OneDrive-个人/技术策划/BTWorkSpace";
 
+    public static bool DebugMode => true;
+
     private static string LocalTestDir =>
         Path.GetDirectoryName(Path.GetDirectoryName(Path.GetDirectoryName(Environment.CurrentDirectory))) ??
         throw new Exception("cant find dir");
 
     // public static string OutPutDir { get; } = GetOutputDir();
     // D:\Client\Project\Assets\Scripts\SGame\InGame\GameLogic\SimpleAI\AutoGen
-    public static string OutPutDir => "D:\\Client\\Project\\Assets\\Scripts\\SGame\\InGame\\GameLogic\\SimpleAI\\AutoGen";
+    public static string OutPutDir =>
+        "D:\\Client\\Project\\Assets\\Scripts\\SGame\\InGame\\GameLogic\\SimpleAI\\AutoGen";
 
     private static string GetOutputDir()
     {
@@ -28,9 +31,10 @@ public static class Configs
 
     // Hero\AI\Decision
     // public static string TestName =>
-        // $"WrapperAI{Path.DirectorySeparatorChar}Hero{Path.DirectorySeparatorChar}AI{Path.DirectorySeparatorChar}Decision{Path.DirectorySeparatorChar}Hero_Common_Equip_Operation.xml";
+    // $"WrapperAI{Path.DirectorySeparatorChar}Hero{Path.DirectorySeparatorChar}AI{Path.DirectorySeparatorChar}Decision{Path.DirectorySeparatorChar}Hero_Common_Equip_Operation.xml";
     // public static string TestName => $"WrapperAI{Path.DirectorySeparatorChar}Monster{Path.DirectorySeparatorChar}BTMonsterPassive.xml";
-    public static string TestName => $"WrapperAI{Path.DirectorySeparatorChar}NewTest{Path.DirectorySeparatorChar}TestNode3.xml";
+    public static string TestName =>
+        $"WrapperAI{Path.DirectorySeparatorChar}NewTest{Path.DirectorySeparatorChar}TestNode3.xml";
 
     public static string TestDir => $"WrapperAI";
 
@@ -38,6 +42,7 @@ public static class Configs
         XElement.Load(GetMeta());
 
     public static string AgentBaseOrInterface { get; } = "BTBaseAgent";
+
     private static string GetMeta()
     {
         var dir = Path.Combine(Dir, "behaviors", "behaviac_meta");
@@ -48,6 +53,9 @@ public static class Configs
         return firstOrDefault.FullName;
     }
 
+    public static string GetTickFuncString => "(int)ObjAgent.CurFrameNum()";
+    public static string DebugModeString => "DEBUG_MODE";
+
     public static IEnumerable<string> Director(DirectoryInfo d)
     {
         var files = d.GetFiles(); //文件
@@ -56,5 +64,10 @@ public static class Configs
         var selectMany = directs.SelectMany(Director);
         var enumerable = collection.Union(selectMany);
         return enumerable;
+    }
+
+    public static string DebugLogString(int id)
+    {
+        return $"#if {DebugModeString}\nObjAgent.DebugModeLog({id});\n#endif\n";
     }
 }
