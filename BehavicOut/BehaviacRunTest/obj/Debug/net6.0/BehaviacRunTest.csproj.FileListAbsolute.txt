@@ -43,3 +43,11 @@ E:\workspace\testDotNet\behaviacRun\BehavicOut\BehaviacRunTest\obj\Debug\net6.0\
 E:\workspace\testDotNet\behaviacRun\BehavicOut\BehaviacRunTest\obj\Debug\net6.0\BehaviacRunTest.pdb
 E:\workspace\testDotNet\behaviacRun\BehavicOut\BehaviacRunTest\obj\Debug\net6.0\BehaviacRunTest.genruntimeconfig.cache
 E:\workspace\testDotNet\behaviacRun\BehavicOut\BehaviacRunTest\obj\Debug\net6.0\ref\BehaviacRunTest.dll
+D:\Client\Behaviac\New\behaviacRun\BehavicOut\BehaviacRunTest\obj\Debug\net6.0\BehaviacRunTest.csproj.AssemblyReference.cache
+D:\Client\Behaviac\New\behaviacRun\BehavicOut\BehaviacRunTest\obj\Debug\net6.0\BehaviacRunTest.GeneratedMSBuildEditorConfig.editorconfig
+D:\Client\Behaviac\New\behaviacRun\BehavicOut\BehaviacRunTest\obj\Debug\net6.0\BehaviacRunTest.AssemblyInfoInputs.cache
+D:\Client\Behaviac\New\behaviacRun\BehavicOut\BehaviacRunTest\obj\Debug\net6.0\BehaviacRunTest.AssemblyInfo.cs
+D:\Client\Behaviac\New\behaviacRun\BehavicOut\BehaviacRunTest\obj\Debug\net6.0\BehaviacRunTest.csproj.CoreCompileInputs.cache
+D:\Client\Behaviac\New\behaviacRun\BehavicOut\BehaviacRunTest\obj\Debug\net6.0\BehaviacRunTest.dll
+D:\Client\Behaviac\New\behaviacRun\BehavicOut\BehaviacRunTest\obj\Debug\net6.0\refint\BehaviacRunTest.dll
+D:\Client\Behaviac\New\behaviacRun\BehavicOut\BehaviacRunTest\obj\Debug\net6.0\BehaviacRunTest.pdb

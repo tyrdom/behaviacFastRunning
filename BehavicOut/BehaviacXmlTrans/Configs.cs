@@ -4,26 +4,19 @@ namespace BehaviacXmlTrans;
 
 public static class Configs
 {
-    public static string Dir => "D:\\Client\\Project\\BTWorkspace";
-    // public static string Dir => "/Users/tianhao/Library/CloudStorage/OneDrive-个人/技术策划/BTWorkSpace";
+    // public static string Dir => "F:\\SGAME_CLONE\\Project\\BTWorkspace";
+    public static string Dir => Path.Combine(WorkDir,"Project\\BTWorkspace");
 
-    public static bool DebugMode => true;
+    public static bool DebugMode => false;
 
-    private static string LocalTestDir =>
-        Path.GetDirectoryName(Path.GetDirectoryName(Path.GetDirectoryName(Environment.CurrentDirectory))) ??
+    private static string[] LocalTestDir =>
+        Path.GetDirectoryName(Environment.CurrentDirectory)?.Split(Path.DirectorySeparatorChar) ??
         throw new Exception("cant find dir");
 
+    private static string WorkDir => Path.Combine(LocalTestDir[..^7]);
     // public static string OutPutDir { get; } = GetOutputDir();
-    // D:\Client\Project\Assets\Scripts\SGame\InGame\GameLogic\SimpleAI\AutoGen
-    public static string OutPutDir =>
-        "D:\\Client\\Project\\Assets\\Scripts\\SGame\\InGame\\GameLogic\\SimpleAI\\AutoGen";
-
-    private static string GetOutputDir()
-    {
-        var directoryName = Path.GetDirectoryName(LocalTestDir) ?? throw new Exception("cant find dir");
-        var combine = Path.Combine(directoryName, "BehaviacRunTest", "AutoGen");
-        return combine;
-    }
+    // public static string OutPutDir => @"D:\Client\Project\Assets\Scripts\SGame\InGame\GameLogic\SimpleAI\AutoGen";
+    public static string OutPutDir => Path.Combine(WorkDir,"Project\\Assets\\Scripts\\SGame\\InGame\\GameLogic\\BtSys\\AutoGen");
 
     private static string Methods { get; } = Path.Combine(Dir, "SGame.meta.xml");
 
@@ -56,6 +49,8 @@ public static class Configs
     public static string GetTickFuncString => "(int)ObjAgent.CurFrameNum()";
     public static string DebugModeString => "DEBUG_MODE";
 
+    public static string CurrentFileName;
+
     public static IEnumerable<string> Director(DirectoryInfo d)
     {
         var files = d.GetFiles(); //文件
@@ -66,8 +61,18 @@ public static class Configs
         return enumerable;
     }
 
-    public static string DebugLogString(int id)
+    public static string DebugLogString(string agentName, int id, string nodeType)
     {
-        return $"#if {DebugModeString}\nObjAgent.DebugModeLog({id});\n#endif\n";
+        var arr = nodeType.Split(".");
+        var typeStr = arr[arr.Length - 1];
+
+        var ts2 = Configs.CurrentFileName.Replace(".cs", "");
+
+        return $"#if {DebugModeString}\n{agentName}.DebugModeLog({id},\"{typeStr}\",\"{ts2}\");\n#endif\n";
+    }
+
+    public static string DebugTreeLog(string agentName,string fileName)
+    {
+        return $"#if {DebugModeString}\n{agentName}.DebugTreeLog(\"{fileName}\");\n#endif\n";
     }
 }

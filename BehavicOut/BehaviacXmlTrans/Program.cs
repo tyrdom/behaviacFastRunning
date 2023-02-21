@@ -9,6 +9,8 @@ class Program
 {
     static void Main(string[] args)
     {
+
+  
         var p = Path.Combine(Configs.Dir, Configs.EditDir);
         // var path = Path.Combine(Configs.Dir, Configs.EditDir, Configs.TestName);
         //
