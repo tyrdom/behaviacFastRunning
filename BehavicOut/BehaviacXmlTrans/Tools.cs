@@ -429,16 +429,20 @@ public static class Tools
         // $"case {id}:\n" + $"goto {idString}Run;\n";
         INodeConfig? extraConfig = null;
         var loopInOneTick = false; // 循环类 一个tick内完成
+        var needCheckRunningWhenOut = intId != runningGoNode; //避免死循环
+        var runningCheckAndGo = needCheckRunningWhenOut
+            ? $"if({resultVarString} == {CSharpStrings.Running})\n{{\n{continueRunningString}\n}}\n{outRunningString}"
+            : "";
         switch (nodeType)
         {
             case "PluginBehaviac.Nodes.DecoratorAlwaysSuccess":
                 acp2 = mustStatusVar;
-                enterDo = successString;
+                runInit = successString;
                 outPutString = successString;
                 break;
             case "PluginBehaviac.Nodes.DecoratorAlwaysFailure":
                 acp2 = mustStatusVar;
-                enterDo = failString;
+                runInit = failString;
                 outPutString = failString;
                 break;
             case "PluginBehaviac.Nodes.DecoratorFailureUntil" or "PluginBehaviac.Nodes.DecoratorSuccessUntil":
@@ -486,11 +490,11 @@ public static class Tools
                 break;
             case "PluginBehaviac.Nodes.Sequence" or "PluginBehaviac.Nodes.And":
                 acp2 = mustStatusVar;
-                enterDo = successString;
+                runInit = successString;
                 break;
             case "PluginBehaviac.Nodes.Selector" or "PluginBehaviac.Nodes.Or":
                 acp2 = mustStatusVar;
-                enterDo = failString;
+                runInit = failString;
                 break;
             case "PluginBehaviac.Nodes.False":
                 acp2 = statusVar;
@@ -502,7 +506,7 @@ public static class Tools
                 break;
             case "PluginBehaviac.Nodes.IfElse":
                 acp2 = mustStatusVar;
-                enterDo = successString;
+                runInit = successString;
                 var orDefault =
                     xElements.FirstOrDefault(x =>
                         (x.Attribute("Identifier")?.Value ?? throw new NullReferenceException()) == "_else") ??
@@ -593,10 +597,15 @@ public static class Tools
                 // private int Node11WhichBranchRunning { get; set; } = -1;
                 acp2 = mustStatusVar;
                 acp2 += $"private int {idString}WhichBranchRunning = -1;\n";
-                enterDo = failString;
+                runInit = failString;
+
                 outPutString +=
-                    $"if({resultVarString} == {CSharpStrings.Running})\n{{\n{continueRunningString}\n}}\n{outRunningString}";
-                headRunningSwitchIdS.Add(intId);
+                    runningCheckAndGo;
+                if (needCheckRunningWhenOut)
+                {
+                    headRunningSwitchIdS.Add(intId);
+                }
+
                 // tail = "";
                 extraId = intId;
                 break;
@@ -605,14 +614,18 @@ public static class Tools
                 acp2 += $"private int {idString}WhichBranchEnter = -1;\n";
                 var allChildrenIds = GetAllChildrenAttr(node, "Id");
                 var length = allChildrenIds.Length;
-                enterDo = $"{idString}WhichBranchEnter = FrameRandom.Random({length});\n";
+                runInit = $"{idString}WhichBranchEnter = FrameRandom.Random({length});\n";
                 var dictionary1 = allChildrenIds.Select(int.Parse).Zip(Enumerable.Range(0, length))
                     .ToDictionary(p => p.First, p => p.Second.ToString());
                 extraConfig = new SelectorProbabilityConfig(dictionary1);
                 extraId = intId;
                 outPutString +=
-                    $"if({resultVarString} == {CSharpStrings.Running})\n{{\n{continueRunningString}\n}}\n{outRunningString}";
-                headRunningSwitchIdS.Add(intId);
+                    runningCheckAndGo;
+                if (needCheckRunningWhenOut)
+                {
+                    headRunningSwitchIdS.Add(intId);
+                }
+
                 break;
             case "PluginBehaviac.Nodes.SelectorProbability":
                 acp2 = mustStatusVar;
@@ -637,12 +650,17 @@ public static class Tools
                 extraConfig = new SelectorProbabilityConfig(dictionary);
                 var foo = enumerable[allChildrenAttr.Length - 1];
 
-                enterDo = $"{idString}RandomMaxNum = (uint)({foo});//获得权重总数\n";
-                enterDo += $"{idString}RandomNowNum = FrameRandom.Random({idString}RandomMaxNum);\n";
+                runInit = $"{idString}RandomMaxNum = (uint)({foo});//获得权重总数\n";
+                runInit += $"{idString}RandomNowNum = FrameRandom.Random({idString}RandomMaxNum);\n";
                 extraId = intId;
                 outPutString +=
-                    $"if({resultVarString} == {CSharpStrings.Running})\n{{\n{continueRunningString}\n}}\n{outRunningString}";
-                headRunningSwitchIdS.Add(intId);
+                    runningCheckAndGo;
+                if (needCheckRunningWhenOut)
+                {
+                    headRunningSwitchIdS.Add(intId);
+                }
+
+
                 break;
             case "PluginBehaviac.Nodes.DecoratorWeight":
                 acp2 = mustStatusVar;
@@ -704,8 +722,9 @@ public static class Tools
                     enterDo +=
                         $"{idString}NowRunTime = 0;\n";
                     var acpAdd = "";
-                    enterDo +=nodeType == "PluginBehaviac.Nodes.DecoratorLoopUntilSuccessOrRunning"?$"{idString}MaxRunTime = 1;\n//循环直到返回成功或者运行中只能固定是循环1次，和配置没有关系,特殊做\n":
-                        $"{idString}MaxRunTime = {ConvertArmToFuncOrParam(agentObjName, countString, idString, out  acpAdd)};\n";
+                    enterDo += nodeType == "PluginBehaviac.Nodes.DecoratorLoopUntilSuccessOrRunning"
+                        ? $"{idString}MaxRunTime = 1;\n//循环直到返回成功或者运行中只能固定是循环1次，和配置没有关系,特殊做\n"
+                        : $"{idString}MaxRunTime = {ConvertArmToFuncOrParam(agentObjName, countString, idString, out acpAdd)};\n";
                     acp2 += acpAdd;
                     body += loopInOneTick
                         ? "if(" + idString + "NowRunTime < " + idString +

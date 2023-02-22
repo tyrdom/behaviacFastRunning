@@ -143,7 +143,9 @@ public static class CSharpStrings
                         var t2 = s.Item2 + cs;
                         return (t1, t2);
                     });
-                    methodName = objName + "." + mName + "(" + s1[..^1] +
+                    var value = firstOrDefault.Attribute("Static")?.Value ?? throw new NullReferenceException();;
+                    var cname = value == "true" ? findClass.Replace("::",".") : objName;
+                    methodName = cname + "." + mName + "(" + s1[..^1] +
                                  ")";
                     constListParam = s2;
                     return returnTypeAndEtc;
