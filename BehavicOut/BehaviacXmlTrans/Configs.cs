@@ -5,7 +5,7 @@ namespace BehaviacXmlTrans;
 public static class Configs
 {
     // public static string Dir => "F:\\SGAME_CLONE\\Project\\BTWorkspace";
-    public static string Dir => Path.Combine(WorkDir,"Project\\BTWorkspace");
+    public static string Dir => Path.Combine(WorkDir, "Project\\BTWorkspace");
 
     public static bool DebugMode => false;
 
@@ -14,9 +14,11 @@ public static class Configs
         throw new Exception("cant find dir");
 
     private static string WorkDir => Path.Combine(LocalTestDir[..^7]);
+
     // public static string OutPutDir { get; } = GetOutputDir();
     // public static string OutPutDir => @"D:\Client\Project\Assets\Scripts\SGame\InGame\GameLogic\SimpleAI\AutoGen";
-    public static string OutPutDir => Path.Combine(WorkDir,"Project\\Assets\\Scripts\\SGame\\InGame\\GameLogic\\BtSys\\AutoGen");
+    public static string OutPutDir =>
+        Path.Combine(WorkDir, "Project\\Assets\\Scripts\\SGame\\InGame\\GameLogic\\BtSys\\AutoGen");
 
     private static string Methods { get; } = Path.Combine(Dir, "SGame.meta.xml");
 
@@ -71,7 +73,7 @@ public static class Configs
         return $"#if {DebugModeString}\n{agentName}.DebugModeLog({id},\"{typeStr}\",\"{ts2}\");\n#endif\n";
     }
 
-    public static string DebugTreeLog(string agentName,string fileName)
+    public static string DebugTreeLog(string agentName, string fileName)
     {
         return $"#if {DebugModeString}\n{agentName}.DebugTreeLog(\"{fileName}\");\n#endif\n";
     }

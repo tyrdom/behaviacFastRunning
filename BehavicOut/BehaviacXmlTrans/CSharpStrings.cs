@@ -97,10 +97,13 @@ public static class CSharpStrings
     }
 
     public static string FindReturnTypeAndEtc(string name, string objName, string nodeId, out string methodName,
-        out string constListParam)
+        out string constListParam, out string[] agesToInit)
     {
         var findClass = FindClassAndEtc(name, out var mName, out var parameters);
-
+        var contains = mName.Contains("PlayAgeAction");
+        agesToInit = contains
+            ? parameters.Where(x => x.StartsWith('"') && x.EndsWith(".bytes\"")).ToArray()
+            : Array.Empty<string>();
 
         var xElements = Configs.MetaXml.Element("agents")
             ?.Elements().ToArray();
@@ -143,8 +146,9 @@ public static class CSharpStrings
                         var t2 = s.Item2 + cs;
                         return (t1, t2);
                     });
-                    var value = firstOrDefault.Attribute("Static")?.Value ?? throw new NullReferenceException();;
-                    var cname = value == "true" ? findClass.Replace("::",".") : objName;
+                    var value = firstOrDefault.Attribute("Static")?.Value ?? throw new NullReferenceException();
+                    ;
+                    var cname = value == "true" ? findClass.Replace("::", ".") : objName;
                     methodName = cname + "." + mName + "(" + s1[..^1] +
                                  ")";
                     constListParam = s2;
@@ -198,14 +202,16 @@ public static class CSharpStrings
 
                 if (s2 == "")
                 {
-                    constList = $"private List<{typeString2}> {varName} = new List<{typeString2}>(){{}};//常数数组参数只用创建1次\n";
+                    constList =
+                        $"private List<{typeString2}> {varName} = new List<{typeString2}>(){{}};//常数数组参数只用创建1次\n";
                     return varName;
                 }
 
                 var replace = s2.Split('|');
                 var s1 = replace.Select(x => FuncParameterFix(paramName, typeString, x, nodeId, out _))
                     .Aggregate("", (s, x) => s + ',' + x)[1..];
-                constList = $"private List<{typeString2}> {varName} = new List<{typeString2}>(){{{s1}}};//常数数组参数只用创建1次\n";
+                constList =
+                    $"private List<{typeString2}> {varName} = new List<{typeString2}>(){{{s1}}};//常数数组参数只用创建1次\n";
                 return varName;
 
             default:
