@@ -1,25 +1,26 @@
-﻿using System.Xml.Linq;
+﻿using LitJson;
+using Microsoft.VisualBasic.FileIO;
+using System.Linq;
+using System.Xml.Linq;
 
 namespace BehaviacXmlTrans;
 
 public static class Tools
 {
     public static string ConvertAXmlFile(string path, string editPath, out string csName,
-        out string objClassName)
+        out string objClassName,Tree tree)
     {
         var root = XElement.Load(path);
-
-
         var fileName1 = path.Replace(editPath, "").Replace(Path.DirectorySeparatorChar, '_');
         var lastIndexOf = fileName1[1..fileName1.LastIndexOf(".", StringComparison.Ordinal)];
+
         csName = lastIndexOf + ".cs";
         //pudge 记录文件名 debug用
         Configs.CurrentFileName = csName;
         var debugString = Configs.DebugMode ? $"#define {Configs.DebugModeString}\n" : "";
         var s = debugString +
-                "using System;\nusing behaviac;\nusing SGame.InGame.GameLogic;\nusing PBConfig;\nusing PB;\nusing System.Collections.Generic;\n\npublic class " +
-                lastIndexOf +
-                CSharpStrings.RunTimeInterface + "\n{\n";
+                $"using GenerateSerializer;\nusing System;\nusing ZGame.InGame.GameLogic;\nusing PBConfig;\nusing PB;\nusing System.Collections.Generic;\n\npublic partial class " +
+                lastIndexOf  + "\n{\n";// $": {CSharpStrings.GenerateInterface},{CSharpStrings.RunTimeInterface}"
 
         // foreach (var xAttribute in rootFirstAttribute)
         // {
@@ -33,10 +34,12 @@ public static class Tools
 
         var value = element.Attribute("AgentType")?.Value ?? throw new NullReferenceException();
         objClassName = CSharpStrings.SimpleRemoveParameterAndActionHead(value);
+        objClassName=Configs.GetAgentStr(objClassName);
         string objName = "agent";
         var name = $"private {objClassName} {objName}  " + ";\n";
         s += name;
 
+        s += $"private IVariable_{lastIndexOf} variable;\n ";
         var enumerable = element.Elements();
         var subtreeConstruct = "";
         var initAges = "";
@@ -53,35 +56,67 @@ public static class Tools
                 case "Connector":
 
                     var result = ConnectorTransFromRoot(xElement, objName, out var countParams,
-                        out subtreeConstruct, out var agesToInit);
+                        out subtreeConstruct, out var agesToInit,tree);
                     s += countParams;
                     s += result;
                     if (agesToInit.Any())
                     {
                         initAges = agesToInit.Aggregate("",
-                            (seed, x) => seed + $"Workspace.Instance.PreLoadAge({x});\n");
+                            (seed, x) => seed + $"Workspace.Instance.PreLoadBte({x});\n");
                     }
 
                     break;
             }
         }
 
-        var constructor =
-            $"public {lastIndexOf}({objClassName} a)\n{{\n{objName} = a;\n{initAges}{subtreeConstruct}}}\n";
-        s += constructor;
+        tree.GenSubTree();
+        tree.GenSubTreeField();
 
-        s += "\n}";
+        var constructor =
+            $"\npublic {lastIndexOf}({objClassName} a, IVariable_{lastIndexOf} variable = null)\n{{\n\t{objName} = a;\n" +
+            $"\tthis.variable = variable ?? new Variable_{lastIndexOf}(); \n"+ "\tthis.variable.SetAgent(agent);\n"+
+            initAges +subtreeConstruct+ "\n" +
+            $"}}\n\npublic {lastIndexOf}() {{ }}\n";
+
+        var getVariable = "public override IVariable GetVariable()\r\n{\r\n\treturn variable;\r\n}\n";
+        var getAgent = "public override BTreeAgent GetAgent()\r\n{\r\n    return agent;\r\n}\n";
+        var sep = Configs.sep+"";
+        var TreePath = path.Replace(Path.Combine(Configs.Dir, Configs.EditDir), "").Replace(".xml", "").Replace(sep,"/")[1..];
+        var TreePathStr = $"\npublic override string TreePath => \"{TreePath}\";\n";
+        s += constructor + getVariable + getAgent + TreePathStr + "\n}";
 
         return s;
     }
 
+
+    public static void GenerateVariable()
+    {
+        foreach (var item in Tree.TreeDic)
+        {
+            var tree = item.Value;
+            if (!Directory.Exists(Configs.OutPutSerializerDir))
+            {
+                Directory.CreateDirectory(Configs.OutPutSerializerDir);
+            }
+
+            var path = Path.Combine($"{Configs.OutPutSerializerDir}",$"Variable_{tree.Path}.cs");
+
+            if (!File.Exists(path))
+            {
+                File.Create(path).Dispose();
+            }
+
+            File.WriteAllText(path, tree.ToGenerateVariable());
+        }   
+    }
+
     public static string ConnectorTransFromRoot(XElement xElement, string agentObjName,
-        out string treeStatusParamsAndAgentObj, out string subTreeConstruct, out HashSet<string> agesToInit)
+        out string treeStatusParamsAndAgentObj, out string subTreeConstruct, out HashSet<string> agesToInit,Tree tree)
     {
         agesToInit = new HashSet<string>();
         treeStatusParamsAndAgentObj = "\n";
         var head =
-            $"public {CSharpStrings.BtStatusEnumName} Tick()\n{{\n NowLocalTick = {Configs.GetTickFuncString};\n";
+            $"public override {CSharpStrings.BtStatusEnumName} OnTick()\n{{\n NowLocalTick = {Configs.GetTickFuncString};\n";
         var res = "";
         var node = xElement.Elements().FirstOrDefault(x => x.Name == "Node") ?? throw new NullReferenceException();
 
@@ -94,7 +129,7 @@ public static class Tools
 
         var s = TransNode(node, rootNodeId, -1, "Root", agentObjName, rootNodeId, null, agesToInit, nodePath,
             out var intsMap,
-            out var tsp, out var nodeResultInitString, out subTreeConstruct) + "\n";
+            out var tsp, out var nodeResultInitString, out subTreeConstruct,tree) + "\n";
         var rootStatus = $"{tickCount}\nprivate {rootRunningEnum} {rootRunningNodeString} = {rootRunningEnum}.None;\n";
         var s1 = intsMap.Aggregate("None,", (sd, iii) => sd + $"\nNode{iii.Id},")[..^1];
         rootStatus += $"private enum {rootRunningEnum} \n{{\n{s1}\n}}\n";
@@ -125,7 +160,7 @@ public static class Tools
         NodeMsg[] nodePathMsg,
         out List<RunningNodePathTrace> headRunningSwitchIdSToNodePath,
         out string classProperties,
-        out string nodeResultInitString, out string subTreeConstruct)
+        out string nodeResultInitString, out string subTreeConstruct,Tree tree)
     {
         classProperties = "";
         headRunningSwitchIdSToNodePath = new List<RunningNodePathTrace>();
@@ -149,9 +184,6 @@ public static class Tools
         res += "//备注：" + value + "\n";
         var id = node.Attribute("Id")?.Value ?? throw new NullReferenceException();
         var intId = int.TryParse(id, out var iii) ? iii : throw new ArgumentException(id);
-        if (intId == 80)
-        {
-        }
 
         var idString = "Node" + id;
         var parentIdString = "Node" + parentId;
@@ -161,11 +193,6 @@ public static class Tools
 
 
         res += "//" + nodeType + "\n";
-
-        // if (id == "5")
-        // {
-        //     Console.Out.WriteLine($"{id}");
-        // }
 
         var runLabel = idString + "Run:\n";
         var debugLogString = Configs.DebugMode ? Configs.DebugLogString(agentObjName, intId, nodeType) : "";
@@ -183,7 +210,7 @@ public static class Tools
         var resultVarString = idString + "Result";
         var parentVarNeedString = "";
         var outOpNeed = "";
-
+        var skipString = "";
         var onEnter = "";
         var optEnterLabel = "";
         var runInit = "";
@@ -311,9 +338,12 @@ public static class Tools
                 //     goto Node48Out;
                 // }
                 onEnter +=
-                    $"if(Node{parentId}RandomNowNum >= {aExp})\n{{\nNode{intId}RunningNode = Node{intId}Running.None;\ngoto Node{intId}Out;\n\n}}\n";
+                    $"if(Node{parentId}RandomNowNum >= {aExp})\n{{\nNode{intId}RunningNode = Node{intId}Running.None;\ngoto Node{intId}Skip;\n\n}}\n";
                 localSwitch = true;
                 runningGoNode = intId;
+                parentVarNeedString = $"{parentVarString} = {resultVarString};\n";
+                outOpNeed += $"//应该跳出整个权重节点\ngoto Node{parentId}Out;\n{skipLabel}";
+                 
                 break;
             case "PluginBehaviac.Nodes.SelectorStochastic":
                 onEnter = "//随机选择之下\n";
@@ -324,11 +354,11 @@ public static class Tools
                                       + $"{parentVarString} = {CSharpStrings.Success};\n"
                                       + $"goto {parentEndStringGoto}"
                                       + $"}}\ngoto Node{parentId}Run;\n";
-                // skipString = skipLabel;
+                
                 break;
             case "PluginBehaviac.Nodes.DecoratorWeight":
                 onEnter = $"//概率权重节点之下{id}\n";
-                parentVarNeedString = $"Node{extraId}Result = {resultVarString};\n";
+                parentVarNeedString = $"Node{extraId}Result = {resultVarString};\n{parentVarString} = {resultVarString};\n";
                 break;
             case "PluginBehaviac.Nodes.DecoratorLoop":
                 onEnter = "//循环节点下\n";
@@ -428,6 +458,8 @@ public static class Tools
             : nodePathMsg.Append(new NodeMsg(intId, nodeType)).ToArray();
 
         // 解析节点
+        string fieldName = "";
+        string fieldType = "";
         var beforeOut = "";
         var acp2 = "";
         var outPutString = "";
@@ -539,13 +571,13 @@ public static class Tools
                 var orDefault =
                     xElements.FirstOrDefault(x =>
                         (x.Attribute("Identifier")?.Value ?? throw new NullReferenceException()) == "_else") ??
-                    throw new ArgumentOutOfRangeException();
+                    throw new ArgumentOutOfRangeException($"not find _else at Node {intId}");
                 var value1 = orDefault.Element("Node")?.Attribute("Id")?.Value ?? throw new NullReferenceException();
                 extraId = int.Parse(value1);
                 break;
             case "PluginBehaviac.Nodes.Condition":
                 ConditionConvert(node, needResult, resultVarString, idString,
-                    agentObjName, agesToInit, out beforeOut, out acp2);
+                    agentObjName, agesToInit, out beforeOut, out acp2, tree);
                 break;
             case "PluginBehaviac.Nodes.Noop":
                 acp2 = statusVar;
@@ -555,13 +587,38 @@ public static class Tools
             case "PluginBehaviac.Nodes.Action":
 
                 acp2 = statusVar;
-
                 var method = node.Attribute("Method")?.Value ??
                              throw new NullReferenceException($"no method in action node {id}");
 
                 var findReturnType =
                     CSharpStrings.FindReturnTypeAndEtc(method, agentObjName, idString, out var methodName,
                         out var constListP, out var ages);
+
+                //黑板值setget
+                var isVariable = CSharpStrings.FindCustomVariable(methodName, out fieldName, out fieldType);
+                if (isVariable)
+                {
+                    if (!tree.Fields.ContainsKey(fieldName))
+                        tree.Fields.Add(fieldName, fieldType);
+
+                    methodName = CSharpStrings.SetCustomVariableReplace(methodName);
+                }
+
+                //team黑板值actorset squadset
+                isVariable = CSharpStrings.FindSetTeamVariable(methodName, out fieldName, out fieldType, out bool bSetActor);
+                if (isVariable)
+                {
+
+                    if(bSetActor)
+                    {
+                        methodName = CSharpStrings.SetCustomTeamSetActorVariableReplace(fieldName, fieldType, methodName,id);
+                    }
+                    else
+                    {
+                        methodName = CSharpStrings.SetCustomTeamSetSquadVariableReplace(fieldName, fieldType, methodName,id);
+                    }
+                }
+
                 agesToInit.UnionWith(ages);
                 acp2 += constListP;
 
@@ -583,9 +640,16 @@ public static class Tools
                     var a = methodName + ";\n";
                     var resOp = node.Attribute("ResultOption")?.Value ??
                                 throw new NullReferenceException($"not Res @ {id}");
-                    var stringToEnum = CSharpStrings.StringToEnum(resOp);
-                    var b = resultVarString + " = " + stringToEnum + ";\n";
-                    beforeOut = a + b;
+                    try { 
+                        var stringToEnum = CSharpStrings.StringToEnum(resOp);
+                        var b = needResult?resultVarString + " = " + stringToEnum + ";\n":"";
+                        beforeOut = a + b;
+                    }
+                    catch (ArgumentOutOfRangeException ex)
+                    {
+                        var newMessage = $"{ex.Message} @ {id}.";
+                        throw new ArgumentOutOfRangeException(newMessage, ex);
+                    }
                 }
 
                 break;
@@ -597,6 +661,16 @@ public static class Tools
                 var r = node.Attribute("Opr")?.Value ??
                         throw new NullReferenceException($"not Res @ {id}");
                 var rr = ConvertArmToFuncOrParam(agentObjName, r, idString, agesToInit, out var constListParam);
+
+                var bVariable = CSharpStrings.FindCustomVariable(rr, out fieldName, out fieldType);
+                if (bVariable)
+                {
+                    if (!tree.Fields.ContainsKey(fieldName))
+                        tree.Fields.Add(fieldName, fieldType);
+
+                    rr = CSharpStrings.GetCustomVariableReplace(rr);
+                }
+
                 acp2 += constListParam;
                 beforeOut = CSharpStrings.SimpleRemoveParameterAndActionHead(l) + " = " +
                             rr + ";\n";
@@ -661,7 +735,7 @@ public static class Tools
                 var length = allChildrenIds.Length;
                 enterDo += $@"for (uint i = {length}; i > 1; i--)
 {{
-var random = FrameRandom.Random(i);
+var random = FSRandom.Random(i);
 ({idString}BranchOrder[random], {idString}BranchOrder[i - 1]) =
 ({idString}BranchOrder[i - 1], {idString}BranchOrder[random]);
 }}
@@ -682,7 +756,8 @@ switch ({idString}BranchOrder[{idString}BranchOrderRunMaxTime])
 else
 {{
 goto {idString}Out;
-}}";
+}}
+";
 
 
                 break;
@@ -709,8 +784,8 @@ goto {idString}Out;
                 extraConfig = new SelectorProbabilityConfig(dictionary);
                 var foo = enumerable[allChildrenAttr.Length - 1];
 
-                runInit = $"{idString}RandomMaxNum = (uint)({foo});//获得权重总数\n";
-                runInit += $"{idString}RandomNowNum = FrameRandom.Random({idString}RandomMaxNum);\n";
+                enterDo = $"{idString}RandomMaxNum = (uint)({foo});//获得权重总数\n";
+                enterDo += $"{idString}RandomNowNum = FSRandom.Random({idString}RandomMaxNum);//只在首次进入时随机，后续节点running不执行随机\n";
                 extraId = intId;
                 outPutString +=
                     runningCheckAndGo;
@@ -725,6 +800,7 @@ goto {idString}Out;
                 acp2 = mustStatusVar;
                 enterDo = $"//这个必然会在概率选择之下{id}\n";
                 outPutString = $"//output这个必然会在概率选择之下{id}\n";
+                
                 break;
 
             case "PluginBehaviac.Nodes.DecoratorLoopUntil" or "PluginBehaviac.Nodes.DecoratorLoopUntilSuccessOrRunning":
@@ -836,7 +912,7 @@ goto {idString}Out;
                     acp2 += "private int " + idString + "NowRunTime = 0;\n";
                     acp2 += "private int " + idString + "MaxRunTime = -1;\n";
                     var initTimes =
-                        $"{idString}NowRunTime = 0;\n{idString}MaxRunTime = {ConvertArmToFuncOrParam(agentObjName, countString, idString, agesToInit, out var acpA)};\n";
+                        $"{idString}NowRunTime = 1;\n{idString}MaxRunTime = {ConvertArmToFuncOrParam(agentObjName, countString, idString, agesToInit, out var acpA)};\n";
                     acp2 += acpA;
                     if (loopInOneTick)
                     {
@@ -864,7 +940,7 @@ goto {idString}Out;
                     var additionalCond = loopInOneTick ? $" && {resultVarString} != {CSharpStrings.Fail}" : "";
                     var endAdd = loopInOneTick && !decorateWhenChildEnds
                         ? $"//选择了一帧内执行，但是不阻塞running的情况下，running会被当成success\nif({resultVarString} == {CSharpStrings.Running}){resultVarString} = {CSharpStrings.Success};\n"
-                        : "";
+                        : $"//未选择一帧内执行，执行完成返回\n";
                     var thisContinueRunningString = loopInOneTick
                         ? $"goto {idString}LoopInOneTick;\n"
                         : $"{runString}" + continueRunningString;
@@ -986,7 +1062,7 @@ goto {idString}Out;
 
                 beforeOut += (needResult ? $"{resultVarString} = " : "") + $"{idString}SubTree.Tick();\n";
                 // Node9SubTree = new WrapperAI_NewTest_TestNode(a);
-                subTreeConstruct += $"{idString}SubTree = new {subTreeType}(a);\n";
+                subTreeConstruct += $"\t{idString}SubTree = new {subTreeType}(a,(IVariable_{subTreeType})this.variable);\n";
                 if (needResult)
                 {
                     var runningNow =
@@ -999,6 +1075,9 @@ goto {idString}Out;
                     beforeOut += runningNow;
                 }
 
+                var subTreeClassName = subTreeName.Replace('/', '_').Replace('"', ' ').Trim();
+                if (!tree.SubTreePath.Contains(subTreeClassName)) tree.SubTreePath.Add(subTreeClassName);            
+                Program.GenTree(Path.Combine(Configs.Dir, Configs.EditDir) +Configs.sep+ subTreeName.Replace('/',Configs.sep).Replace('"',' ').Trim() + ".xml");
                 break;
             default:
                 throw new ArgumentException($"Cant Read  {id} :Type {nodeType}");
@@ -1036,7 +1115,7 @@ goto {idString}Out;
                 agesToInit,
                 append, out var newHeadRunningSwitchIdSToNodePath,
                 out var acp,
-                out var irs, out var subTreeConstructChildren);
+                out var irs, out var subTreeConstructChildren,tree);
             s += s1;
             classProperties += acp;
             headRunningSwitchIdSToNodePath.AddRange(newHeadRunningSwitchIdSToNodePath);
@@ -1073,7 +1152,9 @@ goto {idString}Out;
 
         classProperties += acp2;
 
-        res += onEnter + optEnterLabel + localS + enterDo + runLabel + runInit + inOneTickLoopLabel + debugLogString +
+        var nodeTypes = nodeType.Split('.');
+        var breakPoint = CSharpStrings.GetBreakPointStr(nodeTypes[nodeTypes.Length - 1], id) + "\n";
+        res += onEnter + optEnterLabel + localS + enterDo + runLabel+ breakPoint + runInit + inOneTickLoopLabel + debugLogString +
                s +
                beforeOut + outLabel +
                outPutString +
@@ -1145,7 +1226,7 @@ goto {idString}Out;
     private static void ConditionConvert(XElement node, bool needResult, string resultVarString, string idString,
         string agentObjName,
         HashSet<string> agesToInit,
-        out string body, out string acp2)
+        out string body, out string acp2, Tree tree)
     {
         var btStatusEnumName = CSharpStrings.BtStatusEnumName;
         acp2 = needResult ? $"private {btStatusEnumName} {resultVarString};\n" : "";
@@ -1154,8 +1235,27 @@ goto {idString}Out;
         var left = node.Attribute("Opl")?.Value ?? throw new Exception("parameter null");
         var right = node.Attribute("Opr")?.Value ?? throw new Exception("parameter null");
         var link = CSharpStrings.GenOperator(op);
-        var bb = ConvertArmToFuncOrParam(agentObjName, left, idString + "Opl", agesToInit, out var acp2P1) + link +
-                 ConvertArmToFuncOrParam(agentObjName, right, idString + "Opr", agesToInit, out var acp2P2);
+        var val1 = ConvertArmToFuncOrParam(agentObjName, left, idString + "Opl", agesToInit, out var acp2P1);
+        var bVariable = CSharpStrings.FindCustomVariable(val1, out string fieldName, out string fieldType);
+        if (bVariable)
+        {
+            if (!tree.Fields.ContainsKey(fieldName))
+                tree.Fields.Add(fieldName, fieldType);
+
+            val1 = CSharpStrings.GetCustomVariableReplace(val1);
+        }
+
+        var val2 = ConvertArmToFuncOrParam(agentObjName, right, idString + "Opr", agesToInit, out var acp2P2);
+        bVariable = CSharpStrings.FindCustomVariable(val2, out fieldName, out fieldType);
+        if (bVariable)
+        {
+            if (!tree.Fields.ContainsKey(fieldName))
+                tree.Fields.Add(fieldName, fieldType);
+
+            val2 = CSharpStrings.GetCustomVariableReplace(val2);
+        }
+
+        var bb = val1 + link + val2;
         acp2 += acp2P1;
         acp2 += acp2P2;
         bb = $"{bb} ? {CSharpStrings.Success} : {CSharpStrings.Fail};\n";
@@ -1169,7 +1269,7 @@ goto {idString}Out;
         int nowCheckRunningNode,
         INodeConfig? nodeConfig, HashSet<string> agesToInit, NodeMsg[] nodePath,
         out List<RunningNodePathTrace> runningSwitchToNodePathCollector,
-        out string acp, out string irs, out string subTreeConstruct)
+        out string acp, out string irs, out string subTreeConstruct,Tree tree)
     {
         var id = connector.Attribute("Identifier")?.Value ?? throw new NullReferenceException();
         runningSwitchToNodePathCollector = new List<RunningNodePathTrace>();
@@ -1205,7 +1305,7 @@ goto {idString}Out;
             var transNode = TransNode(xElement, parentId, extraId, fixParentString, agentObjName,
                                 nowCheckRunningNode,
                                 nodeConfig, agesToInit, nodePath, out var aRunningSwitchToNodePath,
-                                out var aStr, out var airs, out var subTreeConstruct2) +
+                                out var aStr, out var airs, out var subTreeConstruct2,tree) +
                             "\n";
             res += transNode;
             acp += aStr;
@@ -1355,38 +1455,23 @@ goto {idString}Out;
 
     public static string GenConstructor(IEnumerable<(string, string objTypeName)> list)
     {
-        //     using behaviac;
-        //
-        // public interface IBTree
-        // {
-        //     public EBTStatus Tick();
-        // }
-        var interfaceStr =
-            "using System;\nusing behaviac;\nusing SGame.InGame.GameLogic;\n\npublic interface IBTree\n{\npublic EBTStatus Tick();\n}\n\n\n";
-        // public static class BTreeStandard
-        // {
-        //     public static IBTree GenByConfig(string s, ObjAgent a)
-        //     {
-        //         return s switch
-        //         {
-        //             "aaa" => new WrapperAI_Hero_Jup_Strategy(a),
-        //             _ => throw new ArgumentOutOfRangeException(nameof(s), s, null)
-        //         };
-        //     }
-        // }
+        var spaceName = "using ZGame.InGame.GameLogic;\nusing System;\n";
 
         var enumerable = list.Select(x =>
-                $" \"{x.Item1.Replace(Path.DirectorySeparatorChar, '/')[1..]}\" => new {x.Item1.Replace(Path.DirectorySeparatorChar, '_')[1..]}(({x.objTypeName})a),\n")
+                $"            \"{x.Item1.Replace(Path.DirectorySeparatorChar, '/')[1..]}\" => new {x.Item1.Replace(Path.DirectorySeparatorChar, '_')[1..]}(({Configs.GetAgentStr(x.objTypeName)})a),\n")
             .Aggregate("", ((s, s1) => s + s1));
         var staticFunc = "public static class BTreeStandard\n" +
                          "{\n" +
-                         $"public static IBTree GenByConfig(string s, {Configs.AgentBaseOrInterface} a)\n" +
-                         "{\n" +
-                         "return s switch\n{\n" +
+                         $"    public static BTree GenByConfig(string s, {Configs.AgentBaseOrInterface} a)\n" +
+                         "    {\n" +
+                         "        return s switch\n        {\n" + 
                          enumerable +
-                         "_ => throw new ArgumentOutOfRangeException(nameof(s), s, null)\n};\n}\n}\n";
-        return interfaceStr + staticFunc;
+                         "            _ => throw new ArgumentOutOfRangeException(nameof(s), s, null)" + "        };\r\n    }\r\n}";
+
+      
+        return spaceName  + staticFunc;
     }
+
 }
 
 public enum PType

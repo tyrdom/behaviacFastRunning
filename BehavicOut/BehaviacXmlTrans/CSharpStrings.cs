@@ -1,4 +1,8 @@
-﻿namespace BehaviacXmlTrans;
+﻿using System.Reflection;
+using System.Text.RegularExpressions;
+using System.Xml.Linq;
+
+namespace BehaviacXmlTrans;
 
 public static class CSharpStrings
 {
@@ -7,8 +11,11 @@ public static class CSharpStrings
     public static string Fail { get; } = $"{BtStatusEnumName}.BT_FAILURE";
     public static string Running { get; } = $"{BtStatusEnumName}.BT_RUNNING";
     public static string Invalid { get; } = $"{BtStatusEnumName}.BT_INVALID";
-    public static string RunTimeInterface => ":IBTree";
+    public static string RunTimeBaseClass => "BTree";
 
+    public static string IGenerateSerializer = "public void Deserialize(MemoryReaderEx memoryReaderEx, ICreateInstance handle)\r\n    {\r\n\r\n    }\r\n\r\n    public void Serialize(MemoryWriterEx memoryWriterEx, ICreateInstance handle)\r\n    {\r\n\r\n    }";
+    public static string GenerateFlag = "[GenerateFormatter]";
+    public static string GenerateInterface = "IGenerateSerializer";
 
     public static Dictionary<string, string> CSTypeShort = new()
     {
@@ -16,6 +23,7 @@ public static class CSharpStrings
         {"System.Boolean", "bool"}, {"System.Int16", "short"}, {"System.UInt16", "ushort"}, {"System.Int64", "long"},
         {"System.UInt64", "ulong"}, {"System.Byte", "ubyte"}, {"System.SByte", "sbyte"}
     };
+
 
     public static string SimpleRemoveParameterAndActionHead(string s)
     {
@@ -160,6 +168,114 @@ public static class CSharpStrings
         }
     }
 
+    public static string SetCustomTeamSetActorVariableReplace(string field, string type, string methodName, string id)
+    {
+        try
+        {
+            var index = methodName.IndexOf(",") + 1;
+            string[] param = methodName.Substring(index, methodName.Length - 1 - index).Split(',');
+            type = type.Substring(0, 1).ToUpper() + type.Substring(1, type.Length - 1);
+            string str = "var Btree#id# = agent.GetActorBTree(#param#);\r\nif(Btree#id# != null)\r\n{\r\n   " +
+          "var variable = Btree#id# as IVariable_WrapperAI_Hero_HeroCommonAI;\r\n   if (variable != null)\r\n       " +
+          "variable.Set#type#Variable_#field#(#val#);\r\n   else\r\n       SDebug.LogError(\"hero variable is " +
+          "not \\\"IVariable_WrapperAI_Hero_HeroCommonAI\\\"\");\r\n}";
+
+            return str.Replace("#field#", field).Replace("#type#", type).Replace("#val#", param[0]).Replace("#param#", param[1]).Replace("#id#",id);;
+        }
+        catch
+        {
+            Console.WriteLine("设置团队黑板值参数错误：" + methodName);
+            return "";
+        }
+
+    }
+
+    public static string SetCustomTeamSetSquadVariableReplace(string field,string type,string methodName,string id)
+    {
+        try
+        {
+            var index = methodName.IndexOf(",") + 1;
+            type = type.Substring(0, 1).ToUpper() + type.Substring(1, type.Length - 1);
+            string[] param = methodName.Substring(index, methodName.Length - 1 - index).Split(',');
+            string str = "var list#id#= agent.GetSquadBTree(#param#);\r\nif(list#id# != null)\r\n{\r\n\tfor (int i = 0; " +
+          "i < list#id#.Count; i++)\r\n\t{\r\n\t\tvar variable = list#id#[i].GetVariable() as IVariable_WrapperAI_Hero_HeroCommonAI;\r\n\t\tif " +
+          "(variable != null)\r\n            variable.Set#type#Variable_#field#(#val#);\r\n        else\r\n           " +
+          "SDebug.LogError(\"hero variable is not \\\"IVariable_WrapperAI_Hero_HeroCommonAI\\\"\");\r\n    }\r\n}";
+
+            return str.Replace("#field#", field).Replace("#type#", type).Replace("#val#", param[0]).Replace("#param#", param[1]).Replace("#id#",id);
+        }
+        catch
+        {
+            Console.WriteLine("设置团队黑板值参数错误："+ methodName);
+            return "";
+        }  
+    }
+
+    public static string SetCustomVariableReplace(string str)
+    {
+       return str.Replace("\",", "(").Replace("( \"", "_").Replace("agent", "variable");
+    }
+
+    public static string GetCustomVariableReplace(string str)
+    {
+        return str.Replace("\")", "()").Replace("( \"", "_").Replace("agent", "variable");
+    }
+
+    public static bool FindCustomVariable(string str, out string field, out string type)
+    {
+        type = "";
+        field = "";
+
+        foreach (var item in Tree.CustomVariableMethod)
+        {
+            if (str.Contains(item.Value.Set)|| str.Contains(item.Value.Get))
+            {
+                type = item.Key;
+                var startIndex = str.IndexOf("\"") + 1;
+                var endIndex = str.LastIndexOf("\"");
+                if (startIndex == -1 || endIndex == -1)
+                {
+                    throw new NullReferenceException($"no support variable str: {str}  field:{field}");
+                    //return false;
+                }
+
+                field = str[startIndex..endIndex];
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+
+    public static bool FindSetTeamVariable(string str, out string field, out string type,out bool setActor)
+    {
+        type = "";
+        field = "";
+        setActor = false;
+
+        foreach (var item in Tree.CustomTeamVariableMethod)
+        {
+            if (str.Contains(item.Value.ActorSet) || str.Contains(item.Value.SquadSet))
+            {
+                setActor = str.Contains(item.Value.ActorSet);
+                type = item.Key;
+                var startIndex = str.IndexOf("\"") + 1;
+                var endIndex = str.LastIndexOf("\"");
+                if (startIndex == -1 || endIndex == -1)
+                {
+                    throw new NullReferenceException($"no support variable str: {str}  field:{field}");
+                    //return false;
+                }
+
+                field = str[startIndex..endIndex];
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     private static string FuncParameterFix(string paramName, string typeString, string argString, string nodeId,
         out string constList)
     {
@@ -236,5 +352,10 @@ public static class CSharpStrings
         var strings = p.Split(','); //先简单切分，认为字符串中没有,
         parameters = strings;
         return enumerable;
+    }
+
+    public static string GetBreakPointStr(string nodeType,string nodeId)
+    {
+        return ("CHECK_BREAKPOINT(\"#nodeType#\", "+"#nodeId#);").Replace("#nodeType#", nodeType).Replace("#nodeId#", nodeId);
     }
 }

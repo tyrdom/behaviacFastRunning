@@ -1,28 +1,70 @@
 ﻿using System.Xml.Linq;
 
+using System.Runtime.InteropServices;
 namespace BehaviacXmlTrans;
 
 public static class Configs
 {
-    // public static string Dir => "F:\\SGAME_CLONE\\Project\\BTWorkspace";
-    public static string Dir => Path.Combine(WorkDir, "Project\\BTWorkspace");
+    public static readonly char sep = Path.DirectorySeparatorChar;
+
+    // public static string Dir => "F:{sep}SGAME_CLONE{sep}Project{sep}BTWorkspace";
+    public static string Dir
+    {
+        get
+        {
+            var workDir = WorkDir;
+            var combine = Path.Combine(workDir, "Project","BTWorkspace");
+        
+            return combine;
+        }
+    }
 
     public static bool DebugMode => false;
 
-    private static string[] LocalTestDir =>
-        Path.GetDirectoryName(Environment.CurrentDirectory)?.Split(Path.DirectorySeparatorChar) ??
-        throw new Exception("cant find dir");
+    private static string[] LocalTestDir
+    {
+        get
+        {
+            return Path.GetDirectoryName(Environment.CurrentDirectory)?.Split(Path.DirectorySeparatorChar)
+                   ??
+                   throw new Exception("cant find dir");
+        }
+    }
 
-    private static string WorkDir => Path.Combine(LocalTestDir[..^7]);
+    private static string WorkDir
+    {
+        get {
+          
+
+            var workDir = Path.Combine(LocalTestDir[..^7]);
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            {
+                var isPathRooted = Path.IsPathRooted(workDir);
+                workDir = Path.DirectorySeparatorChar + workDir;
+                var pathRooted = Path.IsPathRooted(workDir);
+            }
+            return workDir; }
+    }
 
     // public static string OutPutDir { get; } = GetOutputDir();
     // public static string OutPutDir => @"D:\Client\Project\Assets\Scripts\SGame\InGame\GameLogic\SimpleAI\AutoGen";
     public static string OutPutDir =>
-        Path.Combine(WorkDir, "Project\\Assets\\Scripts\\SGame\\InGame\\GameLogic\\BtSys\\AutoGen");
+        Path.Combine(WorkDir,
+            $"Project{sep}Assets{sep}Scripts{sep}InGame{sep}GameLogic{sep}BtSys{sep}AutoGen");
+// /Volumes/OneTb/time/client/trunk/Project/Assets/Scripts/InGame/GameLogic/BtSys/AutoGen
+    public static string OutPutSerializerDir =>
+        Path.Combine(OutPutDir,
+            "Variable");
 
     private static string Methods { get; } = Path.Combine(Dir, "SGame.meta.xml");
 
     public static string EditDir => "behaviors";
+
+    public static string RootDir => Dir.Replace($"Project{sep}BTWorkspace", $"Behaviac{sep}New{sep}");
+
+    public static string FiledCachePath => Path.Combine(RootDir, "FiledCache.txt");
+
+    public static string VariableDirtyPath => Path.Combine(RootDir, "VariableDirty");
 
     // Hero\AI\Decision
     // public static string TestName =>
@@ -36,19 +78,20 @@ public static class Configs
     public static XElement MetaXml { get; } =
         XElement.Load(GetMeta());
 
-    public static string AgentBaseOrInterface { get; } = "BTBaseAgent";
-
+    public static string AgentBaseOrInterface { get; } = "BTreeAgent";
+ 
     private static string GetMeta()
     {
         var dir = Path.Combine(Dir, "behaviors", "behaviac_meta");
 
         var directoryInfo = new DirectoryInfo(dir);
-        var firstOrDefault = directoryInfo.GetFiles("*.meta.xml").FirstOrDefault() ??
+        var fileInfos = directoryInfo.GetFiles("*.meta.xml");
+        var firstOrDefault = fileInfos.FirstOrDefault() ??
                              throw new Exception($"no file match in {dir}");
         return firstOrDefault.FullName;
     }
 
-    public static string GetTickFuncString => "(int)ObjAgent.CurFrameNum()";
+    public static string GetTickFuncString => "(int)BTreeAgent.CurFrameNum()";
     public static string DebugModeString => "DEBUG_MODE";
 
     public static string CurrentFileName;
@@ -76,5 +119,10 @@ public static class Configs
     public static string DebugTreeLog(string agentName, string fileName)
     {
         return $"#if {DebugModeString}\n{agentName}.DebugTreeLog(\"{fileName}\");\n#endif\n";
+    }
+
+    public static string GetAgentStr(string agent)
+    {
+        return "BTreeAgent";
     }
 }

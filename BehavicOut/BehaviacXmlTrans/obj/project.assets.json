@@ -1,36 +1,69 @@
 {
   "version": 3,
   "targets": {
-    "net6.0": {}
+    "net7.0": {
+      "LitJson/0.18.0": {
+        "type": "package",
+        "compile": {
+          "lib/net6.0/LitJSON.dll": {}
+        },
+        "runtime": {
+          "lib/net6.0/LitJSON.dll": {}
+        }
+      }
+    }
   },
-  "libraries": {},
+  "libraries": {
+    "LitJson/0.18.0": {
+      "sha512": "zVK/1iUURxvEZH1eiviFpS8Qbh1fZe926ie18vhHuisVYcNbdVjgG85X8BsGt7WBU5Ka3gZvaQXRX6EsoD2hrw==",
+      "type": "package",
+      "path": "litjson/0.18.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "lib/net20/LitJSON.dll",
+        "lib/net35/LitJSON.dll",
+        "lib/net40/LitJSON.dll",
+        "lib/net45/LitJSON.dll",
+        "lib/net6.0/LitJSON.dll",
+        "lib/netstandard1.5/LitJSON.dll",
+        "lib/netstandard2.0/LitJSON.dll",
+        "lib/netstandard2.1/LitJSON.dll",
+        "litjson.0.18.0.nupkg.sha512",
+        "litjson.nuspec",
+        "litjson.png"
+      ]
+    }
+  },
   "projectFileDependencyGroups": {
-    "net6.0": []
+    "net7.0": [
+      "LitJson >= 0.18.0"
+    ]
   },
   "packageFolders": {
-    "C:\\Users\\win10\\.nuget\\packages\\": {}
+    "/Users/tianhao/.nuget/packages/": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "D:\\Client\\Behaviac\\New\\behaviacRun\\BehavicOut\\BehaviacXmlTrans\\BehaviacXmlTrans.csproj",
+      "projectUniqueName": "/Volumes/OneTb/behaviac/BehavicOut/BehaviacXmlTrans/BehaviacXmlTrans.csproj",
       "projectName": "BehaviacXmlTrans",
-      "projectPath": "D:\\Client\\Behaviac\\New\\behaviacRun\\BehavicOut\\BehaviacXmlTrans\\BehaviacXmlTrans.csproj",
-      "packagesPath": "C:\\Users\\win10\\.nuget\\packages\\",
-      "outputPath": "D:\\Client\\Behaviac\\New\\behaviacRun\\BehavicOut\\BehaviacXmlTrans\\obj\\",
+      "projectPath": "/Volumes/OneTb/behaviac/BehavicOut/BehaviacXmlTrans/BehaviacXmlTrans.csproj",
+      "packagesPath": "/Users/tianhao/.nuget/packages/",
+      "outputPath": "/Volumes/OneTb/behaviac/BehavicOut/BehaviacXmlTrans/obj/",
       "projectStyle": "PackageReference",
       "configFilePaths": [
-        "C:\\Users\\win10\\AppData\\Roaming\\NuGet\\NuGet.Config"
+        "/Users/tianhao/.nuget/NuGet/NuGet.Config"
       ],
       "originalTargetFrameworks": [
-        "net6.0"
+        "net7.0"
       ],
       "sources": {
         "https://api.nuget.org/v3/index.json": {}
       },
       "frameworks": {
-        "net6.0": {
-          "targetAlias": "net6.0",
+        "net7.0": {
+          "targetAlias": "net7.0",
           "projectReferences": {}
         }
       },
@@ -38,11 +71,23 @@
         "warnAsError": [
           "NU1605"
         ]
-      }
+      },
+      "restoreAuditProperties": {
+        "enableAudit": "true",
+        "auditLevel": "low",
+        "auditMode": "all"
+      },
+      "SdkAnalysisLevel": "9.0.100"
     },
     "frameworks": {
-      "net6.0": {
-        "targetAlias": "net6.0",
+      "net7.0": {
+        "targetAlias": "net7.0",
+        "dependencies": {
+          "LitJson": {
+            "target": "Package",
+            "version": "[0.18.0, )"
+          }
+        },
         "imports": [
           "net461",
           "net462",
@@ -57,19 +102,15 @@
         "downloadDependencies": [
           {
             "name": "Microsoft.AspNetCore.App.Ref",
-            "version": "[6.0.12, 6.0.12]"
+            "version": "[7.0.20, 7.0.20]"
           },
           {
-            "name": "Microsoft.NETCore.App.Host.win-x64",
-            "version": "[6.0.12, 6.0.12]"
+            "name": "Microsoft.NETCore.App.Host.osx-arm64",
+            "version": "[7.0.20, 7.0.20]"
           },
           {
             "name": "Microsoft.NETCore.App.Ref",
-            "version": "[6.0.12, 6.0.12]"
-          },
-          {
-            "name": "Microsoft.WindowsDesktop.App.Ref",
-            "version": "[6.0.12, 6.0.12]"
+            "version": "[7.0.20, 7.0.20]"
           }
         ],
         "frameworkReferences": {
@@ -77,7 +118,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.101\\RuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/9.0.100/RuntimeIdentifierGraph.json"
       }
     }
   }
